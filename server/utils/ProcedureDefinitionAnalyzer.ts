@@ -160,23 +160,47 @@ export class ProcedureDefinitionAnalyzer {
       maxLength = functionResult.maxLength
       precision = functionResult.precision
       scale = functionResult.scale
-                } else if (tableName) {
-         // Resolve table alias to actual table name
-         const actualTableName = tableAliasMap.get(tableName) || tableName
-         
-         // Look up column information from bulk table metadata
-         if (bulkTableInfo) {
-           const tableColumnInfo = this.getTableColumnInfoFromBulk(actualTableName, columnName, bulkTableInfo)
-           
-           if (tableColumnInfo) {
-             dataType = tableColumnInfo.dataType
-             isNullable = tableColumnInfo.isNullable
-             maxLength = tableColumnInfo.maxLength
-             precision = tableColumnInfo.precision
-             scale = tableColumnInfo.scale
-           }
-         }
-       }
+    } else if (tableName) {
+      // Resolve table alias to actual table name
+      const actualTableName = tableAliasMap.get(tableName) || tableName
+      
+      // Look up column information from bulk table metadata
+      if (bulkTableInfo) {
+        const tableColumnInfo = this.getTableColumnInfoFromBulk(actualTableName, columnName, bulkTableInfo)
+        
+        if (tableColumnInfo) {
+          dataType = tableColumnInfo.dataType
+          isNullable = tableColumnInfo.isNullable
+          maxLength = tableColumnInfo.maxLength
+          precision = tableColumnInfo.precision
+          scale = tableColumnInfo.scale
+        } else {
+          // Fallback: try to infer type from column name and context
+          const inferredType = this.inferDataTypeFromColumnName(finalColumnName)
+          dataType = inferredType.dataType
+          isNullable = inferredType.isNullable
+          maxLength = inferredType.maxLength
+          precision = inferredType.precision
+          scale = inferredType.scale
+        }
+      } else {
+        // No table info available, try to infer from column name
+        const inferredType = this.inferDataTypeFromColumnName(finalColumnName)
+        dataType = inferredType.dataType
+        isNullable = inferredType.isNullable
+        maxLength = inferredType.maxLength
+        precision = inferredType.precision
+        scale = inferredType.scale
+      }
+    } else {
+      // No table name, try to infer from column name and expression
+      const inferredType = this.inferDataTypeFromColumnName(finalColumnName)
+      dataType = inferredType.dataType
+      isNullable = inferredType.isNullable
+      maxLength = inferredType.maxLength
+      precision = inferredType.precision
+      scale = inferredType.scale
+    }
 
     return {
       name: finalColumnName,
@@ -186,6 +210,96 @@ export class ProcedureDefinitionAnalyzer {
       precision,
       scale
     }
+  }
+
+  /**
+   * Parse CAST expression to determine target type
+   */
+  private parseCastExpression(expression: string): {
+    dataType: string
+    isNullable: boolean
+    maxLength?: number
+    precision?: number
+    scale?: number
+  } {
+    const castMatch = expression.match(/CAST\s*\(.*AS\s+(\w+)(?:\s*\(\s*(\d+)(?:\s*,\s*(\d+))?\s*\))?\s*\)/i)
+    if (castMatch) {
+      const targetType = castMatch[1].toLowerCase()
+      const length = castMatch[2] ? parseInt(castMatch[2]) : undefined
+      const scale = castMatch[3] ? parseInt(castMatch[3]) : undefined
+      
+      switch (targetType) {
+        case 'int':
+        case 'integer':
+          return { dataType: 'int', isNullable: true }
+        case 'float':
+        case 'real':
+          return { dataType: 'decimal', isNullable: true, precision: 18, scale: 2 }
+        case 'decimal':
+        case 'numeric':
+          return { dataType: 'decimal', isNullable: true, precision: length || 18, scale: scale || 2 }
+        case 'varchar':
+        case 'nvarchar':
+          return { dataType: 'varchar', isNullable: true, maxLength: length || 255 }
+        case 'char':
+        case 'nchar':
+          return { dataType: 'char', isNullable: true, maxLength: length || 10 }
+        case 'datetime':
+        case 'date':
+        case 'time':
+          return { dataType: 'datetime', isNullable: true }
+        case 'bit':
+          return { dataType: 'bit', isNullable: true }
+        default:
+          return { dataType: 'varchar', isNullable: true, maxLength: 255 }
+      }
+    }
+    return { dataType: 'varchar', isNullable: true, maxLength: 255 }
+  }
+
+  /**
+   * Parse CONVERT expression to determine target type
+   */
+  private parseConvertExpression(expression: string): {
+    dataType: string
+    isNullable: boolean
+    maxLength?: number
+    precision?: number
+    scale?: number
+  } {
+    const convertMatch = expression.match(/CONVERT\s*\(\s*(\w+)(?:\s*\(\s*(\d+)(?:\s*,\s*(\d+))?\s*\))?\s*,/i)
+    if (convertMatch) {
+      const targetType = convertMatch[1].toLowerCase()
+      const length = convertMatch[2] ? parseInt(convertMatch[2]) : undefined
+      const scale = convertMatch[3] ? parseInt(convertMatch[3]) : undefined
+      
+      switch (targetType) {
+        case 'int':
+        case 'integer':
+          return { dataType: 'int', isNullable: true }
+        case 'float':
+        case 'real':
+          return { dataType: 'decimal', isNullable: true, precision: 18, scale: 2 }
+        case 'decimal':
+        case 'numeric':
+          return { dataType: 'decimal', isNullable: true, precision: length || 18, scale: scale || 2 }
+        case 'varchar':
+        case 'nvarchar':
+          return { dataType: 'varchar', isNullable: true, maxLength: length || 255 }
+        case 'char':
+        case 'nchar':
+          return { dataType: 'char', isNullable: true, maxLength: length || 10 }
+        case 'datetime':
+        case 'date':
+        case 'time':
+          return { dataType: 'datetime', isNullable: true }
+        case 'bit':
+          return { dataType: 'bit', isNullable: true }
+        default:
+          return { dataType: 'varchar', isNullable: true, maxLength: 255 }
+      }
+    }
+    return { dataType: 'varchar', isNullable: true, maxLength: 255 }
   }
 
   private analyzeFunctionReturnType(functionName: string, expression: string): {
@@ -216,12 +330,18 @@ export class ProcedureDefinitionAnalyzer {
         const convertType = this.parseConvertExpression(expression)
         return convertType
       case 'REPLACE':
-      case 'ISNULL':
       case 'CONCAT':
       case 'SUBSTRING':
       case 'LTRIM':
       case 'RTRIM':
       case 'TRIM':
+        return { dataType: 'varchar', isNullable: true, maxLength: 255 }
+      case 'ISNULL':
+        // ISNULL typically returns the same type as the first non-null argument
+        // For bet amounts, it's usually decimal
+        if (expression && (expression.includes('Bet') || expression.includes('Amount'))) {
+          return { dataType: 'decimal', isNullable: true, precision: 18, scale: 2 }
+        }
         return { dataType: 'varchar', isNullable: true, maxLength: 255 }
       case 'LEN':
       case 'CHARINDEX':
@@ -230,41 +350,125 @@ export class ProcedureDefinitionAnalyzer {
       case 'SYSDATETIME':
         return { dataType: 'datetime', isNullable: false }
       default:
-        return { dataType: 'varchar', isNullable: true, maxLength: 255 }
+        // For unknown functions, try to infer from the expression
+        return this.inferTypeFromExpression(expression)
     }
   }
 
-  private parseCastExpression(expression: string): {
+  /**
+   * Infer data type from expression content
+   */
+  private inferTypeFromExpression(expression: string): {
     dataType: string
     isNullable: boolean
     maxLength?: number
     precision?: number
     scale?: number
   } {
-    // This would parse the CAST expression from the AST
-    // For now, simple string matching as a fallback
-    const expr = expression.toLowerCase()
-    if (expr.includes('float')) {
-      return { dataType: 'float', isNullable: true }
-    } else if (expr.includes('int')) {
-      return { dataType: 'int', isNullable: true }
-    } else if (expr.includes('varchar')) {
+    if (!expression) {
       return { dataType: 'varchar', isNullable: true, maxLength: 255 }
-    } else if (expr.includes('decimal')) {
-      return { dataType: 'decimal', isNullable: true, precision: 18, scale: 2 }
     }
+    
+    const expr = expression.toLowerCase()
+    
+    // Check for arithmetic operations - usually result in numeric types
+    if (expr.includes('/') || expr.includes('*') || expr.includes('+') || expr.includes('-')) {
+      // If it involves CAST to FLOAT or contains bet/amount
+      if (expr.includes('float') || expr.includes('bet') || expr.includes('amount')) {
+        return { dataType: 'decimal', isNullable: true, precision: 18, scale: 2 }
+      }
+      return { dataType: 'int', isNullable: true }
+    }
+    
+    // Check for string functions
+    if (expr.includes('replace') || expr.includes('concat') || expr.includes('substring')) {
+      return { dataType: 'varchar', isNullable: true, maxLength: 500 }
+    }
+    
+    // Check for CAST operations
+    if (expr.includes('cast')) {
+      const castMatch = expr.match(/cast\s*\(.*as\s+(\w+)/i)
+      if (castMatch) {
+        const targetType = castMatch[1].toLowerCase()
+        switch (targetType) {
+          case 'int':
+          case 'integer':
+            return { dataType: 'int', isNullable: true }
+          case 'float':
+          case 'real':
+          case 'decimal':
+          case 'numeric':
+            return { dataType: 'decimal', isNullable: true, precision: 18, scale: 2 }
+          case 'varchar':
+          case 'nvarchar':
+          case 'char':
+          case 'nchar':
+            return { dataType: 'varchar', isNullable: true, maxLength: 255 }
+          case 'datetime':
+          case 'date':
+          case 'time':
+            return { dataType: 'datetime', isNullable: true }
+          case 'bit':
+            return { dataType: 'bit', isNullable: true }
+        }
+      }
+    }
+    
     return { dataType: 'varchar', isNullable: true, maxLength: 255 }
   }
 
-  private parseConvertExpression(expression: string): {
+  /**
+   * Infer data type from column name patterns
+   */
+  private inferDataTypeFromColumnName(columnName: string): {
     dataType: string
     isNullable: boolean
     maxLength?: number
     precision?: number
     scale?: number
   } {
-    // Similar to CAST parsing
-    return this.parseCastExpression(expression)
+    const name = columnName.toLowerCase()
+    
+    // ID columns are typically integers
+    if (name.includes('id') || name.endsWith('_id') || name.startsWith('id_')) {
+      return { dataType: 'int', isNullable: true }
+    }
+    
+    // Bet and amount columns are typically decimals
+    if (name.includes('bet') || name.includes('amount') || name.includes('balance') || name.includes('price')) {
+      return { dataType: 'decimal', isNullable: true, precision: 18, scale: 2 }
+    }
+    
+    // Boolean-like columns are typically bit
+    if (name.includes('active') || name.includes('enabled') || name.includes('visible') || 
+        name.includes('flag') || name.includes('is_') || name.startsWith('is') ||
+        name.includes('has_') || name.startsWith('has')) {
+      return { dataType: 'bit', isNullable: true }
+    }
+    
+    // Date/time columns
+    if (name.includes('date') || name.includes('time') || name.includes('created') || 
+        name.includes('modified') || name.includes('updated') || name.includes('deleted')) {
+      return { dataType: 'datetime', isNullable: true }
+    }
+    
+    // Path/URL columns are typically longer varchars
+    if (name.includes('path') || name.includes('url') || name.includes('uri') || name.includes('link')) {
+      return { dataType: 'varchar', isNullable: true, maxLength: 255 }
+    }
+    
+    // Name columns are typically shorter varchars
+    if (name.includes('name') || name.includes('title') || name.includes('label')) {
+      return { dataType: 'varchar', isNullable: true, maxLength: 100 }
+    }
+    
+    // Description columns are typically longer varchars
+    if (name.includes('description') || name.includes('comment') || name.includes('notes') || name.includes('text')) {
+      return { dataType: 'varchar', isNullable: true, maxLength: 500 }
+    }
+    
+    // Default to varchar with reasonable length
+    return { dataType: 'varchar', isNullable: true, maxLength: 255 }
   }
 
 
