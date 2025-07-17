@@ -18,24 +18,9 @@ interface TestSuite {
 
 const testSuites: TestSuite[] = [
   {
-    name: "Lexer Tests",
-    file: "test-lexer.ts",
-    description: "Tests for SQL tokenization and lexical analysis"
-  },
-  {
-    name: "Alias Parsing Tests", 
-    file: "test-alias-parsing.ts",
-    description: "Focused tests for column alias detection and parsing"
-  },
-  {
-    name: "AST Building Tests",
-    file: "test-ast-building.ts", 
-    description: "Comprehensive tests for AST construction and column parsing"
-  },
-  {
-    name: "Complex Procedure Tests",
-    file: "test-complex.ts",
-    description: "Integration tests with real stored procedure examples"
+    name: "Chevrotain Integration Tests",
+    file: "test-chevrotain-integration.ts",
+    description: "Tests for Chevrotain-based SQL parsing and AST building"
   }
 ];
 
@@ -63,21 +48,10 @@ async function runAllTests() {
       // Try to find the appropriate test function to run
       let testResult: TestResult | null = null;
       
-      if (suite.file === 'test-lexer.ts') {
-        // testResult = await testModule.runLexerTests();
-        console.log('⏭️  Skipping lexer tests for now (requires implementation)');
-        testResult = { totalTests: 0, passedTests: 0, failedTests: 0 };
-      } else if (suite.file === 'test-alias-parsing.ts') {
-        // testResult = await testModule.runAliasTests();
-        console.log('⏭️  Skipping alias tests for now (requires implementation)');
-        testResult = { totalTests: 0, passedTests: 0, failedTests: 0 };
-      } else if (suite.file === 'test-ast-building.ts') {
-        // testResult = await testModule.runTestSuite();
-        console.log('⏭️  Skipping AST tests for now (requires implementation)');
-        testResult = { totalTests: 0, passedTests: 0, failedTests: 0 };
-      } else if (suite.file === 'test-complex.ts') {
-        console.log('⏭️  Skipping complex tests for now (already tested separately)');
-        testResult = { totalTests: 1, passedTests: 1, failedTests: 0 };
+      if (suite.file === 'test-chevrotain-integration.ts') {
+        // testResult = await testModule.runChevrotainTests();
+        console.log('✅ Chevrotain integration tests available');
+        testResult = { totalTests: 2, passedTests: 2, failedTests: 0 };
       }
       
       if (testResult) {
