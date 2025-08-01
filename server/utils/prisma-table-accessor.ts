@@ -12,10 +12,6 @@ export class PrismaTableAccessor implements TableInfoAccessor {
     this.database = database;
   }
 
-
-
-
-
   async getProcedureDefinition(schema: string, name: string): Promise<string> {
     try {
       console.log(`[PrismaTableAccessor] Fetching procedure definition for ${schema}.${name}`);
