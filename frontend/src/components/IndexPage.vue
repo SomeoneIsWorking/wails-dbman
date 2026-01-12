@@ -1,16 +1,16 @@
 <template>
   <div>
     <div v-if="isLoading" class="space-y-4">
-      <div v-for="i in 3" :key="i" class="animate-pulse bg-gray-200 h-20 rounded"></div>
+      <div v-for="i in 3" :key="i" class="animate-pulse bg-surface-hover h-20 rounded"></div>
     </div>
     <div v-else-if="connections?.length === 0" class="text-center py-8">
-      <Database class="w-16 h-16 mb-4 text-gray-400" />
-      <h3 class="text-lg font-semibold mb-2">No Database Connections</h3>
-      <p class="text-gray-600 mb-4">
+      <Database class="w-16 h-16 mb-4 text-foreground-secondary" />
+      <h3 class="text-lg font-semibold mb-2 text-foreground">No Database Connections</h3>
+      <p class="text-foreground-secondary mb-4">
         Get started by adding your first database connection
       </p>
       <button
-        class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-2"
+        class="btn-primary"
         @click="$emit('newConnection')"
       >
         <Plus class="w-4 h-4" />
@@ -28,7 +28,7 @@
     </div>
 
     <button
-      class="fixed bottom-4 right-4 w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600"
+      class="fixed bottom-4 right-4 w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center hover:bg-primary-hover"
       @click="$emit('newConnection')"
     >
       <Plus class="w-6 h-6" />

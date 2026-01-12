@@ -11,9 +11,9 @@
         @save="handleSave"
         @cancel="handleCancel"
       />
-      <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+      <div class="flex justify-between items-center mt-4 pt-4 border-t border-border">
         <button
-          class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50 flex items-center gap-2"
+          class="btn-secondary"
           :disabled="isTesting"
           @click="testConnection"
         >
@@ -22,8 +22,8 @@
           {{ isTesting ? 'Testing...' : 'Test Connection' }}
         </button>
         <div class="flex gap-2">
-          <button v-if="isEditing" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600" @click="handleDelete">Delete</button>
-          <button class="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50" @click="handleCancel">Cancel</button>
+          <button v-if="isEditing" class="btn-danger" @click="handleDelete">Delete</button>
+          <button class="px-4 py-2 text-foreground-secondary border border-border rounded hover:bg-surface-hover" @click="handleCancel">Cancel</button>
           <button
             class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
             :disabled="isLoading || isTesting"

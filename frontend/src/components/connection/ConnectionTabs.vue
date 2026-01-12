@@ -1,9 +1,9 @@
 <template>
   <div class="w-full">
-    <div class="flex border-b border-gray-200">
+    <div class="flex border-b border-border">
       <button
         @click="tab = 'connection-string'"
-        :class="tab === 'connection-string' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'"
+        :class="tab === 'connection-string' ? 'border-b-2 border-primary text-primary' : 'text-foreground-secondary'"
         class="px-4 py-2 font-medium flex items-center gap-2"
       >
         <Link class="w-4 h-4" />
@@ -11,7 +11,7 @@
       </button>
       <button
         @click="tab = 'manual'"
-        :class="tab === 'manual' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'"
+        :class="tab === 'manual' ? 'border-b-2 border-primary text-primary' : 'text-foreground-secondary'"
         class="px-4 py-2 font-medium flex items-center gap-2"
       >
         <Edit class="w-4 h-4" />

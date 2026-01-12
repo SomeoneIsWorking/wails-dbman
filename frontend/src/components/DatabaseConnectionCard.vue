@@ -1,16 +1,16 @@
 <template>
-  <div class="bg-white border border-gray-200 rounded p-4 shadow-sm">
+  <div class="bg-surface border border-border rounded p-4 shadow-sm">
     <div class="flex items-center justify-between mb-2">
       <div>
-        <h3 class="font-semibold text-gray-800">{{ connection.name }}</h3>
-        <p class="text-sm text-gray-600">{{ connection.type }} • {{ connection.host }}:{{ connection.port }}</p>
+        <h3 class="font-semibold text-foreground">{{ connection.name }}</h3>
+        <p class="text-sm text-foreground-secondary">{{ connection.type }} • {{ connection.host }}:{{ connection.port }}</p>
       </div>
       <div class="flex gap-2">
-        <button class="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 flex items-center gap-1" @click="editConnection">
+        <button class="btn-secondary" @click="editConnection">
           <Edit class="w-3 h-3" />
           Edit
         </button>
-        <button class="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 flex items-center gap-1" @click="deleteConnection" :disabled="isDeleting">
+        <button class="btn-danger" @click="deleteConnection" :disabled="isDeleting">
           <Trash class="w-3 h-3" />
           Delete
         </button>
@@ -22,12 +22,12 @@
       <hr class="my-3">
       <div class="flex justify-between items-center mb-2">
         <span class="text-sm font-medium">Databases</span>
-        <div class="flex items-center gap-1 text-xs text-gray-500">
+        <div class="flex items-center gap-1 text-xs text-foreground-secondary">
           <span v-if="lastUpdate">
             Updated {{ formatRelativeDate(lastUpdate) }}
           </span>
           <button
-            class="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-1"
+            class="btn-primary"
             @click="refreshDatabases"
             :disabled="isLoading"
           >
@@ -41,7 +41,7 @@
           v-for="db in databases"
           :key="db"
           @click="selectDatabase(db)"
-          class="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 text-left flex items-center gap-1"
+          class="px-2 py-1 text-sm border border-border rounded hover:bg-surface-hover text-left flex items-center gap-1"
         >
           <Database class="w-3 h-3" />
           {{ db }}
@@ -51,7 +51,7 @@
     <template v-else>
       <hr class="my-3">
       <button
-        class="w-full py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center justify-center gap-2"
+        class="w-full btn-primary justify-center"
         @click="loadDatabases"
         :disabled="isLoading"
       >

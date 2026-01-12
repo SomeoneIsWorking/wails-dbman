@@ -4,15 +4,15 @@
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
     @click="close"
   >
-    <div class="bg-white rounded-lg shadow-lg w-full max-w-md mx-4" @click.stop>
-      <div class="p-4 border-b">
+    <div class="bg-surface rounded-lg shadow-lg w-full max-w-md mx-4 border border-border" @click.stop>
+      <div class="p-4 border-b border-border">
         <div class="flex items-center">
-          <Search class="w-5 h-5 mr-2 text-gray-400" />
+          <Search class="w-5 h-5 mr-2 text-foreground-secondary" />
           <input
             v-model="searchQuery"
             type="text"
             placeholder="Search within stored procedure definitions..."
-            class="flex-1 outline-none"
+            class="flex-1 outline-none bg-transparent text-foreground"
             @keydown.down.prevent="navigateResults(1)"
             @keydown.up.prevent="navigateResults(-1)"
             @keydown.enter.prevent="selectResult"
@@ -23,11 +23,11 @@
       </div>
       <div class="p-4 max-h-96 overflow-y-auto">
         <div v-if="isLoading" class="text-center py-4">
-          <Loader class="w-6 h-6 animate-spin mx-auto text-blue-500" />
+          <Loader class="w-6 h-6 animate-spin mx-auto text-primary" />
         </div>
         <div
           v-else-if="searchResults.length === 0"
-          class="py-2 text-center text-gray-500"
+          class="py-2 text-center text-foreground-secondary"
         >
           No results found
         </div>
@@ -35,20 +35,20 @@
           <button
             v-for="(result, index) in searchResults"
             :key="`${result.connectionId}-${result.database}-${result.name}`"
-            class="w-full text-left p-2 rounded hover:bg-gray-100 flex items-center"
-            :class="{ 'bg-gray-200': index === selectedIndex }"
+            class="w-full text-left p-2 rounded hover:bg-surface-hover flex items-center text-foreground"
+            :class="{ 'bg-surface-hover': index === selectedIndex }"
             @click="selectResult"
             @mouseenter="selectedIndex = index"
           >
             <Settings class="w-4 h-4 mr-2" />
             <div class="flex-1">
-              <div class="font-semibold">{{ result.name }}</div>
-              <div class="text-xs text-gray-500">
+              <div class="font-semibold text-foreground">{{ result.name }}</div>
+              <div class="text-xs text-foreground-secondary">
                 {{ result.connectionName }} • {{ result.database }}
               </div>
               <div
                 v-if="result.matchedText"
-                class="text-xs text-gray-600 mt-1 font-mono bg-gray-100 p-1 rounded"
+                class="text-xs text-foreground-secondary mt-1 font-mono bg-surface-hover p-1 rounded"
               >
                 ...{{ result.matchedText }}...
               </div>

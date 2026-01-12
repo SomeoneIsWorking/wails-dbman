@@ -8,17 +8,17 @@
         :database="tab.database"
       />
     </div>
-    <div class="border-t border-gray-200 p-2 flex items-center justify-between bg-gray-50">
+    <div class="border-t border-border p-2 flex items-center justify-between bg-surface-hover">
       <div class="flex items-center gap-2">
         <button
-          class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm flex items-center gap-1"
+          class="btn-primary"
           @click="executeQuery"
         >
           <Play class="w-4 h-4" />
           Execute
         </button>
       </div>
-      <div class="text-xs text-gray-500">
+      <div class="text-xs text-foreground-secondary">
         {{ queryContent.length }} characters
       </div>
     </div>

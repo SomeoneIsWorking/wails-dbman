@@ -14,7 +14,7 @@
         @click.self="$emit('cancel')"
       >
         <div
-          class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-hidden"
+          class="bg-surface rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-hidden border border-border"
         >
           <slot />
         </div>

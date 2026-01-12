@@ -302,7 +302,7 @@ func (a *App) GetTableData(request GetTableDataRequest) (*cache.TableDataRespons
 	return adapter.GetTableData(request.Database, request.Schema, request.TableName, options)
 }
 
-func (a *App) GetViewData(connectionId, database, schema, viewName string, limit int) (*cache.TableDataResponse, error) {
+func (a *App) GetViewData(connectionId, database, schema, viewName string, page, limit int) (*cache.TableDataResponse, error) {
 	adapter, err := a.createAdapter(connectionId)
 	if err != nil {
 		return nil, err
@@ -310,6 +310,7 @@ func (a *App) GetViewData(connectionId, database, schema, viewName string, limit
 
 	// For views, we can use the same GetTableData method but treat it as a table
 	options := map[string]interface{}{
+		"page":  page,
 		"limit": limit,
 	}
 
