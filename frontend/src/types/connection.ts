@@ -5,15 +5,16 @@ export type DatabaseType = (typeof databaseTypes)[number];
 export interface ConnectionForm {
   name?: string;
   type: DatabaseType;
-  host?: string;
+  host: string;
   port: string;
-  username?: string;
-  password?: string;
+  username: string;
+  password: string;
+  database?: string;
 }
 
 export interface Connection extends Omit<ConnectionForm, 'port'> {
   id: string;
-  port?: number;
+  port: number;
   createdAt: string;
   updatedAt: string;
 }

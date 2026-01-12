@@ -1,0 +1,226 @@
+package adapters
+
+import (
+	"fmt"
+	"time"
+	"wails-dbman/pkg/cache"
+	"wails-dbman/pkg/procedure"
+
+	_ "github.com/lib/pq"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
+
+type PostgresAdapter struct {
+	config ConnectionConfig
+	db     *gorm.DB
+}
+
+func (a *PostgresAdapter) connect() (*gorm.DB, error) {
+	if a.db != nil {
+		return a.db, nil
+	}
+	dsn := a.buildDSN()
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return nil, err
+	}
+	a.db = db
+	return db, nil
+}
+
+func (a *PostgresAdapter) buildDSN() string {
+	host := "localhost"
+	if a.config.Host != nil {
+		host = *a.config.Host
+	}
+	port := 5432
+	if a.config.Port != nil {
+		port = *a.config.Port
+	}
+	user := ""
+	if a.config.Username != nil {
+		user = *a.config.Username
+	}
+	password := ""
+	if a.config.Password != nil {
+		password = *a.config.Password
+	}
+	dbname := ""
+	if a.config.Database != nil {
+		dbname = *a.config.Database
+	}
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+}
+
+func (a *PostgresAdapter) ListDatabases() ([]string, error) {
+	db, err := a.connect()
+	if err != nil {
+		return nil, err
+	}
+	var databases []string
+	err = db.Raw("SELECT datname FROM pg_database WHERE datistemplate = false").Pluck("datname", &databases).Error
+	return databases, err
+}
+
+func (a *PostgresAdapter) GetSchema(database string) (*cache.SchemaInfo, error) {
+	// Implement schema fetching
+	// This is complex, need to query pg_catalog
+	return &cache.SchemaInfo{}, nil
+}
+
+func (a *PostgresAdapter) ExecuteQuery(query string, database string) ([]map[string]interface{}, error) {
+	db, err := a.connect()
+	if err != nil {
+		return nil, err
+	}
+	rows, err := db.Raw(query).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+	var results []map[string]interface{}
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePtrs := make([]interface{}, len(columns))
+		for i := range values {
+			valuePtrs[i] = &values[i]
+		}
+		err = rows.Scan(valuePtrs...)
+		if err != nil {
+			return nil, err
+		}
+		row := make(map[string]interface{})
+		for i, col := range columns {
+			row[col] = values[i]
+		}
+		results = append(results, row)
+	}
+	return results, nil
+}
+
+func (a *PostgresAdapter) GetTableData(database, schema, tableName string, options map[string]interface{}) (*cache.TableDataResponse, error) {
+	page := 1
+	if p, ok := options["page"].(int); ok {
+		page = p
+	}
+	limit := 100
+	if l, ok := options["limit"].(int); ok {
+		limit = l
+	}
+	offset := (page - 1) * limit
+	query := fmt.Sprintf("SELECT * FROM %s.%s LIMIT %d OFFSET %d", schema, tableName, limit, offset)
+	results, err := a.ExecuteQuery(query, database)
+	if err != nil {
+		return nil, err
+	}
+	// Get total count
+	countQuery := fmt.Sprintf("SELECT COUNT(*) as total FROM %s.%s", schema, tableName)
+	countResults, err := a.ExecuteQuery(countQuery, database)
+	if err != nil {
+		return nil, err
+	}
+	total := 0
+	if len(countResults) > 0 {
+		if t, ok := countResults[0]["total"].(int64); ok {
+			total = int(t)
+		}
+	}
+	return &cache.TableDataResponse{
+		Results: results,
+		Total:   total,
+	}, nil
+}
+
+func (a *PostgresAdapter) GetProcedureDetails(database, schema, name string) (*cache.StoredProcedureInfo, error) {
+	db, err := a.connect()
+	if err != nil {
+		return nil, err
+	}
+
+	// Get procedure/function definition
+	var definition *string
+	query := `
+		SELECT pg_get_functiondef(p.oid) as definition
+		FROM pg_proc p
+		JOIN pg_namespace n ON p.pronamespace = n.oid
+		WHERE n.nspname = $1 AND p.proname = $2
+		LIMIT 1
+	`
+	err = db.Raw(query, schema, name).Scan(&definition).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Get parameters
+	var parameters []cache.ParameterInfo
+	paramQuery := `
+		SELECT 
+			COALESCE(p.proargnames[ordinal_position], 'param_' || ordinal_position) as name,
+			CASE 
+				WHEN p.proargtypes[ordinal_position] IS NOT NULL THEN 
+					(SELECT t.typname FROM pg_type t WHERE t.oid = p.proargtypes[ordinal_position])
+				ELSE 'unknown'
+			END as type,
+			false as is_nullable
+		FROM pg_proc p
+		JOIN pg_namespace n ON p.pronamespace = n.oid
+		CROSS JOIN generate_subscripts(COALESCE(p.proargtypes, ARRAY[]::oid[]), 1) AS ordinal_position
+		WHERE n.nspname = $1 AND p.proname = $2
+		ORDER BY ordinal_position
+	`
+	rows, err := db.Raw(paramQuery, schema, name).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var param cache.ParameterInfo
+		err := rows.Scan(&param.Name, &param.Type, &param.IsNullable)
+		if err != nil {
+			continue
+		}
+		param.Mode = "IN" // Default for functions/procedures
+		parameters = append(parameters, param)
+	}
+
+	// Analyze procedure definition for result sets
+	resultSets := []cache.ResultSetInfo{}
+	if definition != nil {
+		// Use procedure analysis
+		analysisResult, err := procedure.AnalyzeResultSets(a.config.ConnectionID, database, schema, name, *definition)
+		if err == nil && len(analysisResult.ResultSets) > 0 {
+			for _, rs := range analysisResult.ResultSets {
+				columns := make([]cache.ResultSetColumnInfo, len(rs.Columns))
+				for i, col := range rs.Columns {
+					columns[i] = cache.ResultSetColumnInfo{
+						Name:      col.Name,
+						Type:      col.DataType,
+						Nullable:  col.Nullable,
+						MaxLength: col.MaxLength,
+						Precision: col.Precision,
+						Scale:     col.Scale,
+					}
+				}
+				resultSets = append(resultSets, cache.ResultSetInfo{
+					Columns: columns,
+				})
+			}
+		}
+	}
+
+	return &cache.StoredProcedureInfo{
+		Name:       name,
+		Schema:     schema,
+		Definition: definition,
+		Parameters: parameters,
+		ResultSets: resultSets,
+		Cached:     true,
+		LastCached: time.Now().Format(time.RFC3339),
+	}, nil
+}
