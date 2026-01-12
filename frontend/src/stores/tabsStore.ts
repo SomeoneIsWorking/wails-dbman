@@ -1,5 +1,7 @@
 import { ref } from "vue";
 import { loadTableData } from "../utils/tableDataLoader";
+import { loadViewData } from "../utils/viewDataLoader";
+import { loadProcedureData } from "../utils/procedureDataLoader";
 import type { cache } from "wailsjs/go/models";
 import { defineStore } from "pinia";
 
@@ -22,11 +24,13 @@ export type TableTab = {
 
 export type ProcedureTab = {
   type: "procedure";
+  state: ProcedureTabState;
   objectName: string;
 } & CommonTab;
 
 export type ViewTab = {
   type: "view";
+  state: ViewTabState;
   objectName: string;
 } & CommonTab;
 
@@ -65,6 +69,19 @@ export type TableTabState = AnyState<{
   pageSize: number;
   activeTab: "data" | "schema";
 };
+
+export type ViewTabState = AnyState<{
+  data: cache.TableDataResponse;
+  columns: string[];
+}> & {
+  page: number;
+  pageSize: number;
+};
+
+export type ProcedureTabState = AnyState<{
+  info: cache.StoredProcedureInfo;
+  content: string;
+}>;
 
 export type MessageEntry = {
   type: "info" | "warning" | "error" | "success";
@@ -128,14 +145,20 @@ export const useTabsStore = defineStore("tabs", () => {
     viewName: string
   ) => {
     const tabId = `view-${connectionId}-${database}-${schema}.${viewName}`;
-    addTab({
+    const tab: ViewTab = {
       id: tabId,
       type: "view",
       title: `${schema}.${viewName}`,
       connectionId,
       database,
       objectName: `${schema}.${viewName}`,
-    });
+      state: {
+        type: "loading",
+        page: 0,
+        pageSize: 100,
+      },
+    };
+    addTab(tab, loadViewData);
   };
 
   const addProcedureTab = (
@@ -145,14 +168,18 @@ export const useTabsStore = defineStore("tabs", () => {
     procedureName: string
   ) => {
     const tabId = `procedure-${connectionId}-${database}-${schema}.${procedureName}`;
-    addTab({
+    const tab: ProcedureTab = {
       id: tabId,
       type: "procedure",
       title: `${schema}.${procedureName}`,
       connectionId,
       database,
       objectName: `${schema}.${procedureName}`,
-    });
+      state: {
+        type: "loading",
+      },
+    };
+    addTab(tab, loadProcedureData);
   };
 
   const addQueryTab = (connectionId: string, database: string) => {

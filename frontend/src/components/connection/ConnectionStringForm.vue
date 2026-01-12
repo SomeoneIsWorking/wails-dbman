@@ -1,24 +1,41 @@
 <template>
-  <div class="space-y-6">
-    <div>
-      <label class="block text-sm font-medium text-gray-700 mb-1">Connection String</label>
+  <div class="space-y-2">
+    <div class="grid grid-cols-[auto_1fr] gap-2 items-center">
+      <label class="text-sm font-medium text-foreground text-right"
+        >Connection String</label
+      >
       <input
         v-model="connectionString"
         type="text"
         placeholder="e.g. postgresql://user:pass@localhost:5432/db or Server=localhost;Database=mydb;..."
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full px-2 py-1"
       />
     </div>
 
-    <div v-if="connectionString" class="p-4 bg-gray-100 rounded">
-      <div class="space-y-3 text-sm">
-        <div>Host: <span class="font-medium">{{ form.host || '-' }}</span></div>
-        <div>Port: <span class="font-medium">{{ form.port || getDefaultPort(form.type) }}</span></div>
-        <div>Username: <span class="font-medium">{{ form.username || '-' }}</span></div>
-        <div>Password: <span class="font-medium">***</span></div>
-        <div>
-          <span class="font-medium" :class="isValid ? 'text-green-600' : 'text-red-600'">
-            {{ isValid ? '✓ Valid connection string' : '✗ Invalid connection string' }}
+    <div v-if="connectionString" class="p-2 px-4 bg-surface-hover rounded">
+      <div
+        class="grid grid-cols-[auto_1fr] [&>label]:text-right gap-2 text-sm text-foreground"
+      >
+        <label>Host:</label>
+        <span class="font-medium">{{ form.host || "-" }}</span>
+        <label>Port:</label>
+        <span class="font-medium">{{
+          form.port || getDefaultPort(form.type)
+        }}</span>
+        <label>Username:</label>
+        <span class="font-medium">{{ form.username || "-" }}</span>
+        <label>Password:</label> <span class="font-medium">***</span>
+        <div></div>
+        <div class="text-sm">
+          <span
+            class="font-medium text-foreground"
+            :class="isValid ? 'text-success' : 'text-error'"
+          >
+            {{
+              isValid
+                ? "✓ Valid connection string"
+                : "✗ Invalid connection string"
+            }}
           </span>
         </div>
       </div>
@@ -27,50 +44,56 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
-import { getDefaultPort } from '../../utils/database'
-import { useConnectionForm } from '../../composables/useConnectionForm';
+import { ref, watch, onMounted } from "vue";
+import { getDefaultPort } from "../../utils/database";
+import { useConnectionForm } from "../../composables/useConnectionForm";
 
 const props = defineProps<{
-  modelValue: ReturnType<typeof useConnectionForm>
-  isEditing?: boolean
-}>()
+  modelValue: ReturnType<typeof useConnectionForm>;
+  isEditing?: boolean;
+}>();
 
-const connectionString = ref('')
-const isValid = ref(false)
+const connectionString = ref("");
+const isValid = ref(false);
 
-const { form } = props.modelValue
+const { form } = props.modelValue;
 
 // Generate connection string from form data
 const generateConnectionString = () => {
-  const { type, host, port, username, password, database } = form
-  if (!type || !host) return ''
+  const { type, host, port, username, password, database } = form;
+  if (!type || !host) return "";
 
   switch (type) {
-    case 'postgresql':
-      return `postgresql://${username || ''}${password ? `:${password}` : ''}${username || password ? '@' : ''}${host}${port ? `:${port}` : ''}/${database || ''}`
-    case 'mysql':
-      return `mysql://${username || ''}${password ? `:${password}` : ''}${username || password ? '@' : ''}${host}${port ? `:${port}` : ''}/${database || ''}`
-    case 'mssql':
-      return `Server=${host}${port ? `,${port}` : ''};Database=${database || ''};User Id=${username || ''};Password=${password || ''};`
+    case "postgresql":
+      return `postgresql://${username || ""}${password ? `:${password}` : ""}${
+        username || password ? "@" : ""
+      }${host}${port ? `:${port}` : ""}/${database || ""}`;
+    case "mysql":
+      return `mysql://${username || ""}${password ? `:${password}` : ""}${
+        username || password ? "@" : ""
+      }${host}${port ? `:${port}` : ""}/${database || ""}`;
+    case "mssql":
+      return `Server=${host}${port ? `,${port}` : ""};Database=${
+        database || ""
+      };User Id=${username || ""};Password=${password || ""};`;
     default:
-      return ''
+      return "";
   }
-}
+};
 
 onMounted(() => {
   if (props.isEditing) {
-    connectionString.value = generateConnectionString()
-    isValid.value = true
+    connectionString.value = generateConnectionString();
+    isValid.value = true;
   }
-})
+});
 
 watch(connectionString, (newStr) => {
   if (!newStr) {
-    isValid.value = false
-    return
+    isValid.value = false;
+    return;
   }
 
-  isValid.value = props.modelValue.parseConnectionString(newStr)
-})
+  isValid.value = props.modelValue.parseConnectionString(newStr);
+});
 </script>

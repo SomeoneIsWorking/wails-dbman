@@ -1,92 +1,137 @@
 <template>
   <div class="h-full flex flex-col">
-    <div class="p-4 border-b border-gray-200 bg-gray-50">
+    <div class="p-4 border-b border-border bg-surface-hover">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
           <Settings class="w-5 h-5 text-orange-600" />
-          <h3 class="text-lg font-semibold">{{ tab.objectName }}</h3>
+          <h3 class="text-lg font-semibold text-foreground">{{ tab.objectName }}</h3>
         </div>
         <div class="flex items-center gap-2">
           <button
-            class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+            class="btn-primary"
+            @click="executeProcedure"
           >
             Execute
           </button>
           <button
-            class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
+            class="btn-secondary"
+            @click="toggleModify"
           >
-            Modify
+            {{ isModifying ? 'Save' : 'Modify' }}
           </button>
         </div>
       </div>
     </div>
     <div class="flex-1 overflow-auto p-4">
-      <div v-if="error" class="flex items-center justify-center h-full">
-        <div class="text-center text-red-600">
-          <AlertTriangle class="w-12 h-12 mx-auto mb-4" />
-          <h4 class="text-lg font-semibold mb-2">
-            Failed to load procedure definition
-          </h4>
-          <p class="text-sm">{{ error }}</p>
-        </div>
-      </div>
-      <SqlEditor
-        v-else
-        v-model="procedureContent"
-        height="100%"
-        readonly
-        :connection-id="tab.connectionId"
-        :database="tab.database"
-      />
+      <StateWrapper :state="procedureState">
+        <template #success="{ data }">
+          <div class="space-y-6">
+            <!-- Parameters Section -->
+            <div v-if="data.info?.parameters && data.info.parameters.length > 0">
+              <h4 class="text-lg font-semibold mb-3 text-foreground">Parameters</h4>
+              <div class="bg-surface-hover rounded-lg p-4">
+                <div class="overflow-x-auto">
+                  <table class="min-w-full">
+                    <thead>
+                      <tr class="border-b border-border">
+                        <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Name</th>
+                        <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Type</th>
+                        <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Mode</th>
+                        <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Default</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="param in data.info.parameters" :key="param.name" class="border-b border-border">
+                        <td class="py-2 px-3 text-sm text-foreground">{{ param.name }}</td>
+                        <td class="py-2 px-3 text-sm text-foreground-secondary">{{ param.type }}</td>
+                        <td class="py-2 px-3 text-sm">
+                          <span :class="param.mode === 'IN' ? 'text-green-600' : param.mode === 'OUT' ? 'text-blue-600' : 'text-purple-600'" class="font-medium">
+                            {{ param.mode }}
+                          </span>
+                        </td>
+                        <td class="py-2 px-3 text-sm text-foreground-secondary">{{ param.defaultValue || '-' }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Result Sets Section -->
+            <div v-if="data.info?.resultSets && data.info.resultSets.length > 0">
+              <h4 class="text-lg font-semibold mb-3 text-foreground">Result Sets</h4>
+              <div class="space-y-4">
+                <div v-for="(resultSet, index) in data.info.resultSets" :key="index" class="bg-surface-hover rounded-lg p-4">
+                  <h5 class="text-md font-medium mb-2 text-foreground">Result Set {{ index + 1 }}</h5>
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                      <thead>
+                        <tr class="border-b border-border">
+                          <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Column</th>
+                          <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Type</th>
+                          <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Nullable</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="col in resultSet.columns" :key="col.name" class="border-b border-border">
+                          <td class="py-2 px-3 text-sm text-foreground">{{ col.name }}</td>
+                          <td class="py-2 px-3 text-sm text-foreground-secondary">{{ col.type }}</td>
+                          <td class="py-2 px-3 text-sm">
+                            <span :class="col.nullable ? 'text-orange-600' : 'text-green-600'">
+                              {{ col.nullable ? 'Yes' : 'No' }}
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Definition Section -->
+            <div>
+              <h4 class="text-lg font-semibold mb-3 text-foreground">Definition</h4>
+              <SqlEditor
+                :modelValue="data.content"
+                height="400px"
+                :readonly="!isModifying"
+                :connection-id="tab.connectionId"
+                :database="tab.database"
+              />
+            </div>
+          </div>
+        </template>
+      </StateWrapper>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { Settings, AlertTriangle } from "lucide-vue-next";
+import { computed, ref } from "vue";
+import { Settings } from "lucide-vue-next";
 import SqlEditor from "../SqlEditor.vue";
-import { AnalyzeProcedure } from "wailsjs/go/main/App";
+import StateWrapper from "../StateWrapper.vue";
+import type { ProcedureTab } from "@/stores/tabsStore";
 
 interface Props {
-  tab: {
-    id: string;
-    type: "procedure";
-    title: string;
-    connectionId: string;
-    database: string;
-    objectName: string;
-  };
+  tab: ProcedureTab;
 }
 
 const props = defineProps<Props>();
 
-const procedureContent = ref("");
-const error = ref<string | null>(null);
+const procedureState = computed(() => props.tab.state);
+const isModifying = ref(false);
 
-const loadProcedureContent = async () => {
-  try {
-    error.value = null;
-
-    const procedureInfo = await AnalyzeProcedure(
-      props.tab.connectionId,
-      props.tab.database,
-      props.tab.objectName.split(".")[0],
-      props.tab.objectName.split(".")[1]
-    );
-
-    if (procedureInfo && procedureInfo.definition) {
-      procedureContent.value = procedureInfo.definition;
-    } else {
-      procedureContent.value = `-- Procedure definition not available\n-- ${props.tab.objectName}`;
-    }
-  } catch (err: any) {
-    error.value = err.message;
-    procedureContent.value = `-- Failed to load procedure definition\n-- Error: ${err.message}`;
-  }
+const executeProcedure = () => {
+  alert("Execute functionality not implemented yet. This would run the stored procedure with parameters.");
 };
 
-onMounted(() => {
-  loadProcedureContent();
-});
+const toggleModify = () => {
+  isModifying.value = !isModifying.value;
+  if (!isModifying.value) {
+    // Save logic here if needed
+    alert("Save functionality not implemented yet. This would update the procedure definition.");
+  }
+};
 </script>

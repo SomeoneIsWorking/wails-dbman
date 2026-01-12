@@ -4,10 +4,10 @@
       v-for="tab in tabsStore.tabs"
       :key="tab.id"
       :class="[
-        'flex items-center px-3 py-2 border-r border-gray-200 cursor-pointer hover:bg-gray-50 min-w-0 flex-shrink-0',
+        'flex items-center px-3 py-2 border-r border-border cursor-pointer hover:bg-surface-hover min-w-0 flex-shrink-0',
         tabsStore.activeTab === tab
-          ? 'bg-blue-50 border-b-2 border-b-blue-500 text-blue-700'
-          : 'text-gray-600',
+          ? 'bg-blue-50 dark:bg-blue-900/20 border-b-2 border-b-primary text-primary'
+          : 'text-foreground-secondary',
       ]"
       @click="tabsStore.setActiveTab(tab)"
     >
@@ -17,7 +17,7 @@
       />
       <span class="truncate text-sm">{{ tab.title }}</span>
       <button
-        class="ml-2 p-1 hover:bg-gray-200 rounded flex-shrink-0"
+        class="ml-2 p-1 hover:bg-surface-hover rounded flex-shrink-0"
         @click.stop="tabsStore.closeTab(tab)"
       >
         <X class="w-3 h-3" />

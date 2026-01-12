@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full overflow-auto p-4">
+  <div class="h-full overflow-auto text-primary p-4">
     <StateWrapper :state="tableState">
       <template #success="{ data }">
         <div class="space-y-6">
@@ -10,33 +10,33 @@
               Columns ({{ data.schema.columns.length }})
             </h4>
             <div class="overflow-x-auto">
-              <table class="min-w-full border border-gray-300">
-                <thead class="bg-gray-50">
+              <table class="min-w-full border border-border">
+                <thead class="bg-surface-hover">
                   <tr>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Name</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Type</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Nullable</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Default</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Primary</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Foreign</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-foreground-secondary uppercase tracking-wider border-b">Name</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-foreground-secondary uppercase tracking-wider border-b">Type</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-foreground-secondary uppercase tracking-wider border-b">Nullable</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-foreground-secondary uppercase tracking-wider border-b">Default</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-foreground-secondary uppercase tracking-wider border-b">Primary</th>
+                    <th class="px-4 py-2 text-left text-xs font-medium text-foreground-secondary uppercase tracking-wider border-b">Foreign</th>
                   </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="column in data.schema.columns" :key="column.name" class="hover:bg-gray-50">
-                    <td class="px-4 py-2 text-sm font-medium text-gray-900">{{ column.name }}</td>
-                    <td class="px-4 py-2 text-sm text-gray-500">{{ column.type }}</td>
-                    <td class="px-4 py-2 text-sm text-gray-500">
-                      <span :class="column.nullable ? 'text-green-600' : 'text-red-600'">
+                <tbody class="bg-surface divide-y divide-border">
+                  <tr v-for="column in data.schema.columns" :key="column.name" class="hover:bg-surface-hover">
+                    <td class="px-4 py-2 text-sm font-medium text-foreground">{{ column.name }}</td>
+                    <td class="px-4 py-2 text-sm text-foreground-secondary">{{ column.type }}</td>
+                    <td class="px-4 py-2 text-sm text-foreground-secondary">
+                      <span :class="column.nullable ? 'text-success' : 'text-error'">
                         {{ column.nullable ? 'Yes' : 'No' }}
                       </span>
                     </td>
-                    <td class="px-4 py-2 text-sm text-gray-500">{{ column.defaultValue || '-' }}</td>
-                    <td class="px-4 py-2 text-sm text-gray-500">
-                      <span v-if="column.primary" class="text-blue-600 font-medium">✓</span>
+                    <td class="px-4 py-2 text-sm text-foreground-secondary">{{ column.defaultValue || '-' }}</td>
+                    <td class="px-4 py-2 text-sm text-foreground-secondary">
+                      <span v-if="column.primary" class="text-primary font-medium">✓</span>
                       <span v-else>-</span>
                     </td>
-                    <td class="px-4 py-2 text-sm text-gray-500">
-                      <span v-if="column.foreign" class="text-purple-600 font-medium">✓</span>
+                    <td class="px-4 py-2 text-sm text-foreground-secondary">
+                      <span v-if="column.foreign" class="text-accent font-medium">✓</span>
                       <span v-else>-</span>
                     </td>
                   </tr>

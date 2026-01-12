@@ -1,16 +1,16 @@
 <template>
   <div class="h-full flex flex-col">
-    <div class="p-4 border-b border-gray-200 bg-gray-50">
+    <div class="p-4 border-b border-border bg-surface-hover">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
-          <Table class="w-5 h-5 text-green-600" />
-          <h3 class="text-lg font-semibold">{{ tab.objectName }}</h3>
+          <Table class="w-5 h-5 text-success" />
+          <h3 class="text-lg font-semibold text-foreground">{{ tab.objectName }}</h3>
         </div>
         <div class="flex items-center gap-2">
-          <button class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm" @click="refreshData">
+          <button class="btn-primary" @click="refreshData">
             Refresh
           </button>
-          <button class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm">
+          <button class="btn-accent">
             Export
           </button>
         </div>
@@ -18,17 +18,17 @@
     </div>
 
     <!-- Tab Navigation -->
-    <div class="flex border-b border-gray-200 bg-white">
+    <div class="flex border-b border-border bg-surface">
       <button
-        :class="tableState!.activeTab === 'data' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'"
-        class="px-4 py-2 text-sm font-medium hover:text-blue-600"
+        :class="tableState!.activeTab === 'data' ? 'border-b-2 border-primary text-primary' : 'text-foreground-secondary'"
+        class="px-4 py-2 text-sm font-medium hover:text-primary"
         @click="tableState!.activeTab = 'data'"
       >
         Data
       </button>
       <button
-        :class="tableState!.activeTab === 'schema' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'"
-        class="px-4 py-2 text-sm font-medium hover:text-blue-600"
+        :class="tableState!.activeTab === 'schema' ? 'border-b-2 border-primary text-primary' : 'text-foreground-secondary'"
+        class="px-4 py-2 text-sm font-medium hover:text-primary"
         @click="tableState!.activeTab = 'schema'"
       >
         Schema

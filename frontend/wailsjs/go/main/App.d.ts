@@ -24,7 +24,7 @@ export function GetSchema(arg1:string,arg2:string,arg3:boolean):Promise<cache.Sc
 
 export function GetTableData(arg1:main.GetTableDataRequest):Promise<cache.TableDataResponse>;
 
-export function GetViewData(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number):Promise<cache.TableDataResponse>;
+export function GetViewData(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:number):Promise<cache.TableDataResponse>;
 
 export function ProcedureSearch(arg1:string):Promise<Array<search.ProcedureSearchResult>>;
 

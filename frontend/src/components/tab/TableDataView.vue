@@ -2,14 +2,14 @@
   <div class="h-full flex flex-col">
     <!-- Pagination Controls -->
     <div
-      class="p-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between"
+      class="p-3 border-b border-border bg-surface-hover flex items-center justify-between"
     >
       <div class="flex items-center gap-2">
-        <span class="text-sm text-gray-600">Rows per page:</span>
+        <span class="text-sm text-foreground-secondary">Rows per page:</span>
         <select
           v-model="tableState.pageSize"
           @change="changePageSize"
-          class="text-sm border border-gray-300 rounded px-2 py-1"
+          class="text-sm border border-border rounded px-2 py-1 bg-surface text-foreground"
         >
           <option :value="50">50</option>
           <option :value="100">100</option>
@@ -21,17 +21,17 @@
         <button
           :disabled="tableState.page < 1"
           @click="goToPage(tableState.page - 1)"
-          class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-3 py-1 text-sm border border-border rounded hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed text-foreground"
         >
           Previous
         </button>
-        <span class="text-sm text-gray-600">
+        <span class="text-sm text-foreground-secondary">
           Page {{ tableState.page + 1 }} of {{ totalPages }}
         </span>
         <button
           :disabled="tableState.page + 1 >= totalPages"
           @click="goToPage(tableState.page + 1)"
-          class="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-3 py-1 text-sm border border-border rounded hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed text-foreground"
         >
           Next
         </button>

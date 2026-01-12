@@ -42,8 +42,8 @@ export function GetTableData(arg1) {
   return window['go']['main']['App']['GetTableData'](arg1);
 }
 
-export function GetViewData(arg1, arg2, arg3, arg4, arg5) {
-  return window['go']['main']['App']['GetViewData'](arg1, arg2, arg3, arg4, arg5);
+export function GetViewData(arg1, arg2, arg3, arg4, arg5, arg6) {
+  return window['go']['main']['App']['GetViewData'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
 export function ProcedureSearch(arg1) {
