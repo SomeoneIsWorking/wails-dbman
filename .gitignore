@@ -24,3 +24,6 @@ logs
 /cache
 /generated
 prisma/cache.db
+build/bin
+
+/db.sqlite
