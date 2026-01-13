@@ -1,117 +1,42 @@
 <template>
-  <div class="h-full flex flex-col">
-    <div class="p-4 border-b border-border bg-surface-hover">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <Settings class="w-5 h-5 text-orange-600" />
-          <h3 class="text-lg font-semibold text-foreground">{{ tab.objectName }}</h3>
-        </div>
-        <div class="flex items-center gap-2">
-          <button
-            class="btn-primary"
-            @click="executeProcedure"
-          >
-            Execute
-          </button>
-          <button
-            class="btn-secondary"
-            @click="toggleModify"
-          >
-            {{ isModifying ? 'Save' : 'Modify' }}
-          </button>
-        </div>
-      </div>
-    </div>
-    <div class="flex-1 overflow-auto p-4">
-      <StateWrapper :state="procedureState">
-        <template #success="{ data }">
-          <div class="space-y-6">
-            <!-- Parameters Section -->
-            <div v-if="data.info?.parameters && data.info.parameters.length > 0">
-              <h4 class="text-lg font-semibold mb-3 text-foreground">Parameters</h4>
-              <div class="bg-surface-hover rounded-lg p-4">
-                <div class="overflow-x-auto">
-                  <table class="min-w-full">
-                    <thead>
-                      <tr class="border-b border-border">
-                        <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Name</th>
-                        <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Type</th>
-                        <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Mode</th>
-                        <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Default</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="param in data.info.parameters" :key="param.name" class="border-b border-border">
-                        <td class="py-2 px-3 text-sm text-foreground">{{ param.name }}</td>
-                        <td class="py-2 px-3 text-sm text-foreground-secondary">{{ param.type }}</td>
-                        <td class="py-2 px-3 text-sm">
-                          <span :class="param.mode === 'IN' ? 'text-green-600' : param.mode === 'OUT' ? 'text-blue-600' : 'text-purple-600'" class="font-medium">
-                            {{ param.mode }}
-                          </span>
-                        </td>
-                        <td class="py-2 px-3 text-sm text-foreground-secondary">{{ param.defaultValue || '-' }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+  <TabView
+    :title="tab.objectName"
+    :icon="SettingsIcon"
+    icon-class="text-orange-500"
+    :tabs="[
+      { id: 'info', label: 'Info' },
+      { id: 'definition', label: 'Definition' },
+      { id: 'query', label: 'Query' }
+    ]"
+    v-model:activeTab="procedureState.activeTab"
+  >
+    <template #actions>
+      <button v-if="procedureState.activeTab === 'definition'" class="btn-ghost" @click="toggleModify">
+        <component :is="isModifying ? Save : Edit3" class="w-3.5 h-3.5" />
+        {{ isModifying ? 'Save' : 'Modify' }}
+      </button>
+      <button v-if="procedureState.activeTab === 'query'" class="btn-primary" @click="executeProcedure">
+        <Play class="w-3.5 h-3.5" />
+        Execute
+      </button>
+    </template>
 
-            <!-- Result Sets Section -->
-            <div v-if="data.info?.resultSets && data.info.resultSets.length > 0">
-              <h4 class="text-lg font-semibold mb-3 text-foreground">Result Sets</h4>
-              <div class="space-y-4">
-                <div v-for="(resultSet, index) in data.info.resultSets" :key="index" class="bg-surface-hover rounded-lg p-4">
-                  <h5 class="text-md font-medium mb-2 text-foreground">Result Set {{ index + 1 }}</h5>
-                  <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                      <thead>
-                        <tr class="border-b border-border">
-                          <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Column</th>
-                          <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Type</th>
-                          <th class="text-left py-2 px-3 text-sm font-medium text-foreground-secondary">Nullable</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="col in resultSet.columns" :key="col.name" class="border-b border-border">
-                          <td class="py-2 px-3 text-sm text-foreground">{{ col.name }}</td>
-                          <td class="py-2 px-3 text-sm text-foreground-secondary">{{ col.type }}</td>
-                          <td class="py-2 px-3 text-sm">
-                            <span :class="col.nullable ? 'text-orange-600' : 'text-green-600'">
-                              {{ col.nullable ? 'Yes' : 'No' }}
-                            </span>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Definition Section -->
-            <div>
-              <h4 class="text-lg font-semibold mb-3 text-foreground">Definition</h4>
-              <SqlEditor
-                :modelValue="data.content"
-                height="400px"
-                :readonly="!isModifying"
-                :connection-id="tab.connectionId"
-                :database="tab.database"
-              />
-            </div>
-          </div>
-        </template>
-      </StateWrapper>
-    </div>
-  </div>
+    <StateWrapper :loading="procedureState.loading" :error="procedureState.error">
+      <ProcedureInfoTab v-if="procedureState.activeTab === 'info'" :info="procedureState.info" />
+      <ProcedureDefinitionTab v-else-if="procedureState.activeTab === 'definition'" :content="procedureState.content" :is-modifying="isModifying" :connection-id="tab.connectionId" :database="tab.database" />
+      <ProcedureQueryTab v-else-if="procedureState.activeTab === 'query'" :object-name="tab.objectName" :parameters="procedureState.info?.parameters" :connection-id="tab.connectionId" :database="tab.database" />
+    </StateWrapper>
+  </TabView>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { Settings } from "lucide-vue-next";
-import SqlEditor from "../SqlEditor.vue";
+import { Settings as SettingsIcon, Save, Edit3, Play } from "lucide-vue-next";
 import StateWrapper from "../StateWrapper.vue";
+import TabView from "../TabView.vue";
+import ProcedureInfoTab from "./ProcedureInfoTab.vue";
+import ProcedureDefinitionTab from "./ProcedureDefinitionTab.vue";
+import ProcedureQueryTab from "./ProcedureQueryTab.vue";
 import type { ProcedureTab } from "@/stores/tabsStore";
 
 interface Props {

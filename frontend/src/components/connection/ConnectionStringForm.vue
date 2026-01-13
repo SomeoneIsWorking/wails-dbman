@@ -1,41 +1,30 @@
 <template>
-  <div class="space-y-2">
-    <div class="grid grid-cols-[auto_1fr] gap-2 items-center">
-      <label class="text-sm font-medium text-foreground text-right"
-        >Connection String</label
-      >
-      <input
+  <div class="space-y-4">
+    <div class="flex flex-col gap-1.5">
+      <label class="text-sm font-bold uppercase tracking-wider text-foreground-secondary ml-1">Universal Connector</label>
+      <textarea
         v-model="connectionString"
-        type="text"
-        placeholder="e.g. postgresql://user:pass@localhost:5432/db or Server=localhost;Database=mydb;..."
-        class="w-full px-2 py-1"
-      />
+        rows="3"
+        placeholder="postgresql://user:password@localhost:5432/dbname"
+        class="w-full resize-none font-mono text-sm leading-relaxed"
+      ></textarea>
     </div>
 
-    <div v-if="connectionString" class="p-2 px-4 bg-surface-hover rounded">
-      <div
-        class="grid grid-cols-[auto_1fr] [&>label]:text-right gap-2 text-sm text-foreground"
-      >
-        <label>Host:</label>
-        <span class="font-medium">{{ form.host || "-" }}</span>
-        <label>Port:</label>
-        <span class="font-medium">{{
-          form.port || getDefaultPort(form.type)
-        }}</span>
-        <label>Username:</label>
-        <span class="font-medium">{{ form.username || "-" }}</span>
-        <label>Password:</label> <span class="font-medium">***</span>
-        <div></div>
-        <div class="text-sm">
-          <span
-            class="font-medium text-foreground"
-            :class="isValid ? 'text-success' : 'text-error'"
-          >
-            {{
-              isValid
-                ? "✓ Valid connection string"
-                : "✗ Invalid connection string"
-            }}
+    <div v-if="connectionString" class="p-3 bg-surface-hover/30 rounded border border-border/50 animate-in fade-in duration-200">
+      <div class="grid grid-cols-[80px_1fr] gap-x-2 gap-y-1 text-sm">
+        <span class="text-foreground-secondary uppercase font-bold text-sm tracking-tight">Host</span>
+        <span class="font-medium truncate">{{ form.host || "-" }}</span>
+        
+        <span class="text-foreground-secondary uppercase font-bold text-sm tracking-tight">Port</span>
+        <span class="font-medium">{{ form.port || getDefaultPort(form.type) }}</span>
+        
+        <span class="text-foreground-secondary uppercase font-bold text-sm tracking-tight">Auth</span>
+        <span class="font-medium truncate">{{ form.username || "-" }} : <span class="opacity-50">********</span></span>
+        
+        <div class="col-span-2 pt-2 border-t border-border/30 mt-1 flex items-center gap-1.5">
+          <div :class="isValid ? 'bg-green-500' : 'bg-red-500'" class="w-1.5 h-1.5 rounded-full"></div>
+          <span class="font-bold uppercase tracking-widest text-[9px]" :class="isValid ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+            {{ isValid ? "Parser Success" : "Parser Failed" }}
           </span>
         </div>
       </div>

@@ -1,57 +1,58 @@
-import { GetViewData, GetSchema } from "wailsjs/go/main/App";
+import { GetViewData, GetTableDataCount } from "wailsjs/go/main/App";
 import type { ViewTab } from "../stores/tabsStore";
+import { useConnectionsStore } from "../stores/connectionsStore";
 
 export async function loadViewData(tab: ViewTab) {
-  tab.state = {
-    type: "loading",
-    page: tab.state.page,
-    pageSize: tab.state.pageSize,
-  };
+  tab.state.loading = true;
+  tab.state.error = null;
+
   try {
+    const connectionsStore = useConnectionsStore();
     const [schemaName, viewName] = tab.objectName.split(".");
 
-    // Get view schema to know column information
-    const schemaResponse = await GetSchema(
-      tab.connectionId,
-      tab.database,
-      false
+    // Find connection and view info from store
+    const connection = connectionsStore.connections.find(
+      (c) => c.id === tab.connectionId
     );
-
-    const viewInfo = schemaResponse.views.find(
-      (v) => v.schema === schemaName && v.name === viewName
+    const databaseInfo = connection?.databases.find(
+      (d) => d.name === tab.database
+    );
+    const viewInfo = databaseInfo?.viewsBySchema[schemaName]?.find(
+      (v) => v.name === viewName
     );
 
     if (!viewInfo) {
-      throw new Error(`View ${tab.objectName} not found in schema`);
+      throw new Error(`View ${tab.objectName} not found in schema cache`);
     }
 
-    const columns = viewInfo.columns.map(col => col.name);
+    // Get view data and count
+    // Backend GetViewData currently doesn't take filters explicitly but we can use GetTableDataCount
+    const [response, total] = await Promise.all([
+      GetViewData(
+        tab.connectionId,
+        tab.database,
+        schemaName,
+        viewName,
+        tab.state.page + 1,
+        tab.state.pageSize
+      ),
+      GetTableDataCount({
+        connectionId: tab.connectionId,
+        database: tab.database,
+        schema: schemaName,
+        tableName: viewName,
+        filters: [], // Views don't have filters in UI yet
+      }),
+    ]);
 
-    // Get view data
-    const response = await GetViewData(
-      tab.connectionId,
-      tab.database,
-      schemaName,
-      viewName,
-      tab.state.page,
-      tab.state.pageSize
-    );
-
-    tab.state = {
-      type: "success",
-      data: response,
-      columns,
-      page: tab.state.page,
-      pageSize: tab.state.pageSize,
-    };
+    tab.state.data = response;
+    tab.state.columns = viewInfo.columns;
+    tab.state.definition = viewInfo.definition || "";
+    tab.state.totalRows = total;
+    tab.state.loading = false;
   } catch (err) {
     console.error("View data loading error:", err);
-    const errorMsg = (err as Error).message || "Unknown error occurred";
-    tab.state = {
-      type: "error",
-      error: errorMsg,
-      page: tab.state.page,
-      pageSize: tab.state.pageSize,
-    };
+    tab.state.error = (err as Error).message || "Unknown error occurred";
+    tab.state.loading = false;
   }
 }

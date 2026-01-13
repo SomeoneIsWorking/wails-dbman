@@ -2,11 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  @apply text-sm text-left bg-surface;
+}
+
 @layer base {
   :root {
     --color-background: 249 250 251; /* gray-50 */
     --color-surface: 255 255 255; /* white */
-    --color-surface-hover: 243 244 246; /* gray-100 */
+    --color-surface-hover: 220 220 220; /* gray-200 */
     --color-border: 209 213 219; /* gray-300 */
     --color-text: 31 41 55; /* gray-800 */
     --color-text-secondary: 107 114 128; /* gray-500 */
@@ -28,54 +32,102 @@
     --color-accent: 196 181 253; /* purple-400 */
     --color-accent-hover: 168 85 247; /* purple-500 */
   }
+
+  /* Custom scrollbar styles */
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
 }
 
 @layer components {
+  .btn-base {
+    @apply px-2 py-1 text-xs rounded transition-all flex items-center gap-1.5 font-medium whitespace-nowrap;
+  }
+
   .btn-primary {
-    @apply px-3 py-1 text-sm rounded flex items-center gap-1;
+    @apply btn-base;
     @apply bg-primary text-white hover:bg-primary-hover;
     @apply dark:bg-transparent dark:border dark:border-primary dark:text-primary dark:hover:bg-primary dark:hover:text-white;
   }
 
   .btn-success {
-    @apply px-3 py-1 text-sm rounded flex items-center gap-1;
+    @apply btn-base;
     @apply bg-green-500 text-white hover:bg-green-600;
     @apply dark:bg-transparent dark:border dark:border-green-500 dark:text-green-500 dark:hover:bg-green-500 dark:hover:text-white;
   }
 
   .btn-accent {
-    @apply px-3 py-1 text-sm rounded flex items-center gap-1;
+    @apply btn-base;
     @apply bg-accent text-white hover:bg-accent-hover;
     @apply dark:bg-transparent dark:border dark:border-accent dark:text-accent dark:hover:bg-accent dark:hover:text-white;
   }
 
   .btn-secondary {
-    @apply px-3 py-1 text-sm rounded flex items-center gap-1;
+    @apply btn-base;
     @apply bg-gray-500 text-white hover:bg-gray-600;
     @apply dark:bg-transparent dark:border dark:border-gray-500 dark:text-gray-500 dark:hover:bg-gray-500 dark:hover:text-white;
   }
 
   .btn-danger {
-    @apply px-3 py-1 text-sm rounded flex items-center gap-1;
+    @apply btn-base;
     @apply bg-red-500 text-white hover:bg-red-600;
     @apply dark:bg-transparent dark:border dark:border-red-500 dark:text-red-500 dark:hover:bg-red-500 dark:hover:text-white;
+  }
+
+  .btn-ghost {
+    @apply btn-base;
+    @apply text-foreground-secondary hover:text-foreground hover:bg-surface-hover;
   }
 
   input[type="text"],
   input[type="password"],
   input[type="number"] {
-    @apply bg-surface border border-border rounded-md px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary;
+    @apply bg-surface border border-border rounded px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary;
   }
 
   select {
-    @apply appearance-none bg-surface border border-border rounded-md px-3 py-2 pr-10 text-foreground focus:outline-none focus:ring-2 focus:ring-primary;
+    @apply appearance-none bg-surface border border-border rounded px-2 py-1 pr-8 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='rgb(var(--color-text-secondary))' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.5rem center;
+    background-position: right 0.4rem center;
     background-repeat: no-repeat;
-    background-size: 1.5em 1.5em;
+    background-size: 1.2em 1.2em;
   }
 
   label {
-    @apply text-foreground;
+    @apply text-foreground text-xs font-medium;
+  }
+
+  .toolbar {
+    @apply flex items-center justify-between border-b border-border bg-surface shrink-0;
+  }
+
+  .toolbar-group {
+    @apply flex items-center gap-2;
+  }
+
+  .toolbar-divider {
+    @apply h-4 w-px bg-border mx-1;
+  }
+
+  .tab-nav {
+    @apply flex gap-0.5;
+  }
+
+  .tab-item {
+    @apply px-2.5 py-1 text-xs font-medium rounded transition-colors relative whitespace-nowrap;
+    @apply text-foreground-secondary hover:text-foreground hover:bg-surface-hover;
+  }
+
+  .tab-item-active {
+    @apply text-accent bg-surface-hover shadow-sm;
+  }
+
+  .tab-content-header {
+    @apply toolbar;
+  }
+
+  .tab-content-body {
+    @apply flex-1 flex flex-col min-h-0 bg-surface overflow-hidden;
   }
 }

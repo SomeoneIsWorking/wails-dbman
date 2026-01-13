@@ -1,70 +1,53 @@
 <template>
-  <div class="sql-editor-container">
-    <div v-if="showHeader" class="flex items-center justify-between mb-2">
-      <div class="flex items-center gap-2">
-        <h4 class="text-sm font-medium text-foreground">SQL Definition</h4>
-        <div v-if="validationStatus" class="flex items-center gap-1">
-          <component 
-            :is="validationStatus.isValid ? CheckCircle : X"
-            :class="validationStatus.isValid ? 'text-green-500' : 'text-red-500'"
-            class="w-4 h-4"
-          />
-          <span :class="validationStatus.isValid ? 'text-green-600' : 'text-red-600'" class="text-xs">
-            {{ validationStatus.isValid ? 'Valid SQL' : `${validationStatus.errors.length} error(s)` }}
-          </span>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
+  <div class="h-full flex flex-col overflow-hidden bg-surface">
+    <div class="flex-1 relative group overflow-hidden">
+      <div ref="editorContainer" class="h-full"></div>
+      <!-- Overlay Actions -->
+      <div class="absolute top-2 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all bg-surface border border-border rounded shadow-sm z-10 px-1 py-0.5">
+        <slot name="actions" />
         <button
-          class="btn-secondary"
+          class="btn-ghost !p-1"
+          title="Copy"
           @click="copyToClipboard"
         >
-          <Clipboard class="w-3 h-3" />
-          Copy
+          <Clipboard class="w-3.5 h-3.5" />
         </button>
         <button
           v-if="showValidateButton"
-          class="btn-primary"
+          class="btn-ghost !p-1"
+          :class="{ 'text-primary': validating }"
+          title="Validate"
           :disabled="validating"
           @click="validateSql"
         >
-          <component :is="validating ? Loader : CheckCircle" class="w-3 h-3" :class="{ 'animate-spin': validating }" />
-          Validate
+          <component :is="validating ? Loader : CheckCircle" class="w-3.5 h-3.5" :class="{ 'animate-spin': validating }" />
         </button>
+      </div>
+
+      <!-- Quick Status -->
+      <div v-if="validationStatus && !validating" class="absolute top-2 right-4 group-hover:hidden z-0">
+        <component 
+          :is="validationStatus.isValid ? CheckCircle : AlertTriangle"
+          :class="validationStatus.isValid ? 'text-green-500/30' : 'text-error/30'"
+          class="w-3.5 h-3.5"
+        />
       </div>
     </div>
     
-    <div ref="editorContainer" class="border border-border rounded-lg overflow-hidden" :style="{ height: typeof height === 'number' ? `${height}px` : height }"></div>
-    
-    <!-- Validation Messages -->
-    <div v-if="validationStatus && !validationStatus.isValid" class="mt-2 space-y-1">
+    <!-- Compact Validation Messages -->
+    <div v-if="validationStatus && !validationStatus.isValid" class="bg-red-500/5 border-t border-red-500/20 px-3 py-1.5 shrink-0 animate-in slide-in-from-bottom-1">
       <div 
         v-for="(error, index) in validationStatus.errors" 
         :key="index"
-        class="bg-red-50 border border-red-200 rounded p-2 text-sm"
+        class="flex items-start gap-2 text-sm"
       >
-        <div class="flex items-start gap-2">
-          <AlertTriangle class="w-4 h-4 text-red-500 mt-0.5" />
-          <div>
-            <div class="text-red-700 font-medium">{{ error.message }}</div>
-            <div v-if="error.line" class="text-red-600 text-xs">
-              Line {{ error.line }}, Column {{ error.column }}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Warnings -->
-    <div v-if="validationStatus && validationStatus.warnings?.length" class="mt-2 space-y-1">
-      <div 
-        v-for="(warning, index) in validationStatus.warnings" 
-        :key="index"
-        class="bg-amber-50 border border-amber-200 rounded p-2 text-sm"
-      >
-        <div class="flex items-start gap-2">
-          <AlertTriangle class="w-4 h-4 text-amber-500 mt-0.5" />
-          <div class="text-amber-700">{{ warning }}</div>
+        <AlertTriangle class="w-3.5 h-3.5 text-red-500 mt-0.5 shrink-0" />
+        <div class="flex-1 min-w-0">
+          <span class="text-red-600 dark:text-red-400 font-bold uppercase mr-2">Error:</span>
+          <span class="text-foreground font-medium">{{ error.message }}</span>
+          <span v-if="error.line" class="text-foreground-secondary ml-2 opacity-70">
+            [L{{ error.line }}:C{{ error.column }}]
+          </span>
         </div>
       </div>
     </div>
@@ -73,7 +56,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { CheckCircle, X, Clipboard, Loader, AlertTriangle } from 'lucide-vue-next'
+import { CheckCircle, Clipboard, Loader, AlertTriangle } from 'lucide-vue-next'
 import * as monaco from 'monaco-editor'
 import type { ValidationResult } from '~/types/validation'
 import { useThemeStore } from '@/stores/themeStore'
@@ -255,7 +238,7 @@ defineExpose({
 .sql-editor-container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  height: 100%;
 }
 
 .monaco-container {
@@ -263,18 +246,14 @@ defineExpose({
 }
 
 :deep(.monaco-editor) {
-  border-radius: 0.5rem;
-}
-
-:deep(.monaco-editor .overflow-guard) {
-  border-radius: 0.5rem;
+  padding-top: 8px;
 }
 
 :deep(.monaco-editor .margin) {
-  background-color: rgb(var(--color-surface-hover));
+  background-color: transparent !important;
 }
 
 :deep(.monaco-editor .monaco-editor-background) {
-  background-color: rgb(var(--color-surface));
+  background-color: transparent !important;
 }
 </style> 

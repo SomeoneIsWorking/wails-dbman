@@ -184,6 +184,11 @@ export namespace cache {
 	    comment?: string;
 	}
 	
+	export interface Filter {
+	    column: string;
+	    operator: string;
+	    value: any;
+	}
 	export interface ForeignKeyResponse {
 	    columns: string[];
 	    referencedTable: string;
@@ -295,6 +300,13 @@ export namespace cache {
 
 export namespace main {
 	
+	export interface GetTableDataCountRequest {
+	    connectionId: string;
+	    database: string;
+	    schema: string;
+	    tableName: string;
+	    filters: cache.Filter[];
+	}
 	export interface GetTableDataRequest {
 	    connectionId: string;
 	    database: string;
@@ -302,6 +314,7 @@ export namespace main {
 	    tableName: string;
 	    page: number;
 	    limit: number;
+	    filters: cache.Filter[];
 	}
 
 }

@@ -100,6 +100,12 @@ type TableDataResponse struct {
 	Total   int                      `json:"total"`
 }
 
+type Filter struct {
+	Column   string      `json:"column"`
+	Operator string      `json:"operator"`
+	Value    interface{} `json:"value"`
+}
+
 type ProcedureParameterData struct {
 	Name         string  `json:"name"`
 	Type         string  `json:"type"`

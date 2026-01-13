@@ -3,12 +3,13 @@ import { defineStore } from "pinia";
 import { groupBy } from "lodash-es";
 import { GetConnections, GetSchema } from "wailsjs/go/main/App";
 import type { Connection } from "~/types/wails";
+import type { TableInfo, ViewInfo, StoredProcedureInfo } from "../types/schema";
 
 export interface DatabaseInfo {
   name: string;
-  tablesBySchema: Record<string, Array<{ schema: string; name: string }>>;
-  viewsBySchema: Record<string, Array<{ schema: string; name: string }>>;
-  proceduresBySchema: Record<string, Array<{ schema: string; name: string }>>;
+  tablesBySchema: Record<string, TableInfo[]>;
+  viewsBySchema: Record<string, ViewInfo[]>;
+  proceduresBySchema: Record<string, StoredProcedureInfo[]>;
 }
 
 export interface ExtendedConnection extends Connection {

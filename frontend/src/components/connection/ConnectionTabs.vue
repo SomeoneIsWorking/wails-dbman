@@ -1,25 +1,27 @@
 <template>
   <div class="w-full">
-    <div class="flex border-b border-border">
-      <button
-        @click="tab = 'connection-string'"
-        :class="tab === 'connection-string' ? 'border-b-2 border-primary text-primary' : 'text-foreground-secondary'"
-        class="px-4 py-2 font-medium flex items-center gap-2"
-      >
-        <Link class="w-4 h-4" />
-        Connection String
-      </button>
+    <div class="tab-nav mb-4 border-b border-border pb-px">
       <button
         @click="tab = 'manual'"
-        :class="tab === 'manual' ? 'border-b-2 border-primary text-primary' : 'text-foreground-secondary'"
-        class="px-4 py-2 font-medium flex items-center gap-2"
+        :class="['tab-item !rounded-b-none', tab === 'manual' ? 'tab-item-active !shadow-none border-b-2 border-primary' : '']"
       >
-        <Edit class="w-4 h-4" />
-        Manual Input
+        <div class="flex items-center gap-1.5 px-2">
+          <Edit class="w-3.5 h-3.5" />
+          <span>Manual Input</span>
+        </div>
+      </button>
+      <button
+        @click="tab = 'connection-string'"
+        :class="['tab-item !rounded-b-none', tab === 'connection-string' ? 'tab-item-active !shadow-none border-b-2 border-primary' : '']"
+      >
+        <div class="flex items-center gap-1.5 px-2">
+          <Link class="w-3.5 h-3.5" />
+          <span>Connection String</span>
+        </div>
       </button>
     </div>
 
-    <div class="mt-4">
+    <div class="animate-in fade-in duration-300">
       <ConnectionStringForm
         v-if="tab === 'connection-string'"
         :model-value="formState"

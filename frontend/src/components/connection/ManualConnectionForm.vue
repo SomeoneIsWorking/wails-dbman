@@ -1,34 +1,46 @@
 <template>
-  <div class="grid grid-cols-[auto_1fr] gap-2 items-center">
-    <label class="text-sm font-medium text-foreground text-right">Host</label>
-    <input
-      v-model="form.host"
-      type="text"
-      placeholder="localhost"
-      class="w-full px-2 py-1"
-    />
+  <div class="grid grid-cols-[120px_1fr] gap-3 items-center">
+    <label class="text-right pr-2">Host</label>
+    <div class="flex gap-2">
+      <input
+        v-model="form.host"
+        type="text"
+        placeholder="localhost"
+        class="flex-1"
+      />
+      <div class="flex items-center gap-2">
+        <label class="whitespace-nowrap">Port</label>
+        <input
+          v-model="form.port"
+          type="number"
+          :placeholder="getDefaultPort(form.type)"
+          class="w-24"
+        />
+      </div>
+    </div>
 
-    <label class="text-sm font-medium text-foreground text-right">Port</label>
-    <input
-      v-model="form.port"
-      type="number"
-      :placeholder="getDefaultPort(form.type)"
-      class="w-full px-2 py-1"
-    />
-
-    <label class="text-sm font-medium text-foreground text-right">Username</label>
+    <label class="text-right pr-2">Username</label>
     <input
       v-model="form.username"
       type="text"
-      class="w-full px-2 py-1"
+      placeholder="e.g. root"
+      class="w-full"
     />
 
-    <label class="text-sm font-medium text-foreground text-right">Password</label>
+    <label class="text-right pr-2">Password</label>
     <input
       v-model="form.password"
       type="password"
-      :placeholder="isEditing ? 'Leave empty to keep current password' : undefined"
-      class="w-full px-2 py-1"
+      :placeholder="isEditing ? '••••••••' : 'Password'"
+      class="w-full"
+    />
+
+    <label class="text-right pr-2">Database</label>
+    <input
+      v-model="form.database"
+      type="text"
+      placeholder="e.g. postgres (optional)"
+      class="w-full"
     />
   </div>
 </template>

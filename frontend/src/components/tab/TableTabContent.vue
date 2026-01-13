@@ -1,59 +1,82 @@
 <template>
-  <div class="h-full flex flex-col">
-    <div class="p-4 border-b border-border bg-surface-hover">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <Table class="w-5 h-5 text-success" />
-          <h3 class="text-lg font-semibold text-foreground">{{ tab.objectName }}</h3>
-        </div>
-        <div class="flex items-center gap-2">
-          <button class="btn-primary" @click="refreshData">
-            Refresh
+  <TabView
+    :title="tab.objectName"
+    :icon="TableIcon"
+    icon-class="text-green-500"
+    :tabs="[
+      { id: 'data', label: 'Data' },
+      { id: 'schema', label: 'Schema' }
+    ]"
+    v-model:activeTab="tableState!.activeTab"
+  >
+    <template #actions v-if="tableState!.activeTab === 'data'">
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-foreground-secondary whitespace-nowrap">Rows:</label>
+        <select
+          v-model="tableState!.pageSize"
+          @change="changePageSize"
+          class="text-xs h-7"
+        >
+          <option :value="50">50</option>
+          <option :value="100">100</option>
+          <option :value="500">500</option>
+          <option :value="1000">1000</option>
+        </select>
+        
+        <div class="toolbar-divider"></div>
+
+        <div class="flex items-center gap-1">
+          <button
+            :disabled="tableState!.page < 1"
+            @click="goToPage(tableState!.page - 1)"
+            class="btn-ghost"
+            title="Previous Page"
+          >
+            <ChevronLeft class="w-4 h-4" />
           </button>
-          <button class="btn-accent">
-            Export
+          <span class="text-sm font-medium text-foreground-secondary text-center">
+            {{ tableState!.page + 1 }} / {{ totalPages || 1 }}
+          </span>
+          <button
+            :disabled="tableState!.page + 1 >= totalPages"
+            @click="goToPage(tableState!.page + 1)"
+            class="btn-ghost"
+            title="Next Page"
+          >
+            <ChevronRight class="w-4 h-4" />
           </button>
         </div>
+
+        <div class="toolbar-divider"></div>
+
+        <button class="btn-ghost" @click="refreshData">
+          <RefreshCw class="w-3.5 h-3.5" />
+          Refresh
+        </button>
+        <button class="btn-ghost">
+          <Download class="w-3.5 h-3.5" />
+          Export
+        </button>
       </div>
-    </div>
+    </template>
 
-    <!-- Tab Navigation -->
-    <div class="flex border-b border-border bg-surface">
-      <button
-        :class="tableState!.activeTab === 'data' ? 'border-b-2 border-primary text-primary' : 'text-foreground-secondary'"
-        class="px-4 py-2 text-sm font-medium hover:text-primary"
-        @click="tableState!.activeTab = 'data'"
-      >
-        Data
-      </button>
-      <button
-        :class="tableState!.activeTab === 'schema' ? 'border-b-2 border-primary text-primary' : 'text-foreground-secondary'"
-        class="px-4 py-2 text-sm font-medium hover:text-primary"
-        @click="tableState!.activeTab = 'schema'"
-      >
-        Schema
-      </button>
-    </div>
-
-    <!-- Content Area -->
-    <div class="flex-1 overflow-hidden">
-      <TableDataView
-        v-if="tableState!.activeTab === 'data'"
-        :tab="tab"
-      />
-      <TableSchemaView
-        v-else-if="tableState!.activeTab === 'schema'"
-        :tab="tab"
-      />
-    </div>
-  </div>
+    <TableDataView
+      v-if="tableState!.activeTab === 'data'"
+      :tab="tab"
+    />
+    <TableSchemaView
+      v-else-if="tableState!.activeTab === 'schema'"
+      :tab="tab"
+    />
+  </TabView>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Table } from 'lucide-vue-next'
+import { Table as TableIcon, RefreshCw, Download, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import TableDataView from './TableDataView.vue'
 import TableSchemaView from './TableSchemaView.vue'
+import TabView from '../TabView.vue'
 import type { TableTab } from '../../stores/tabsStore'
 import { loadTableData } from '@/utils/tableDataLoader'
 
@@ -65,7 +88,23 @@ const props = defineProps<Props>()
 
 const tableState = computed(() => props.tab.state)
 
+const totalPages = computed(() =>
+  Math.ceil(tableState.value.totalRows / tableState.value.pageSize)
+);
+
 const refreshData = () => {
   loadTableData(props.tab)
 }
+
+const changePageSize = () => {
+  tableState.value.page = 0;
+  loadTableData(props.tab);
+};
+
+const goToPage = (page: number) => {
+  if (page >= 0 && page < totalPages.value) {
+    tableState.value.page = page;
+    loadTableData(props.tab);
+  }
+};
 </script>
