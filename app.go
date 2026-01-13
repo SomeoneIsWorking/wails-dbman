@@ -279,12 +279,21 @@ func (a *App) StopBackgroundLoader(connectionId, database string) error {
 }
 
 type GetTableDataRequest struct {
-	ConnectionID string `json:"connectionId"`
-	Database     string `json:"database"`
-	Schema       string `json:"schema"`
-	TableName    string `json:"tableName"`
-	Page         int    `json:"page"`
-	Limit        int    `json:"limit"`
+	ConnectionID string         `json:"connectionId"`
+	Database     string         `json:"database"`
+	Schema       string         `json:"schema"`
+	TableName    string         `json:"tableName"`
+	Page         int            `json:"page"`
+	Limit        int            `json:"limit"`
+	Filters      []cache.Filter `json:"filters"`
+}
+
+type GetTableDataCountRequest struct {
+	ConnectionID string         `json:"connectionId"`
+	Database     string         `json:"database"`
+	Schema       string         `json:"schema"`
+	TableName    string         `json:"tableName"`
+	Filters      []cache.Filter `json:"filters"`
 }
 
 func (a *App) GetTableData(request GetTableDataRequest) (*cache.TableDataResponse, error) {
@@ -295,11 +304,25 @@ func (a *App) GetTableData(request GetTableDataRequest) (*cache.TableDataRespons
 
 	// Get table data with pagination
 	options := map[string]interface{}{
-		"page":  request.Page,
-		"limit": request.Limit,
+		"page":    request.Page,
+		"limit":   request.Limit,
+		"filters": request.Filters,
 	}
 
 	return adapter.GetTableData(request.Database, request.Schema, request.TableName, options)
+}
+
+func (a *App) GetTableDataCount(request GetTableDataCountRequest) (int, error) {
+	adapter, err := a.createAdapter(request.ConnectionID)
+	if err != nil {
+		return 0, err
+	}
+
+	options := map[string]interface{}{
+		"filters": request.Filters,
+	}
+
+	return adapter.GetTableDataCount(request.Database, request.Schema, request.TableName, options)
 }
 
 func (a *App) GetViewData(connectionId, database, schema, viewName string, page, limit int) (*cache.TableDataResponse, error) {

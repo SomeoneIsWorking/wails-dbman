@@ -1,40 +1,51 @@
 <template>
   <Dialog :is-open="isOpen" @cancel="handleCancel">
-    <div class="p-6 overflow-y-auto">
+    <div class="toolbar !bg-surface flex-none">
+      <div class="flex items-center gap-2">
+        <Server class="w-4 h-4 text-primary" />
+        <h2 class="text-xs font-bold uppercase tracking-tight">{{ title }}</h2>
+      </div>
+      <button class="btn-ghost !p-1" @click="handleCancel">
+        <X class="w-4 h-4" />
+      </button>
+    </div>
+
+    <ScrollView class="p-4 min-h-0 flex-1">
       <ConnectionForm
-        :title="title"
         :is-editing="isEditing"
         :is-loading="isLoading"
         :error="error"
         :form-state="formState"
-        :save-button-text="saveButtonText"
         @save="handleSave"
-        @cancel="handleCancel"
       />
-      <div class="flex justify-between items-center mt-4 pt-4 border-t border-border">
-        <button
-          class="btn-secondary"
-          :disabled="isTesting"
-          @click="testConnection"
-        >
-          <span v-if="isTesting" class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>
-          <Zap v-else class="w-4 h-4" />
-          {{ isTesting ? 'Testing...' : 'Test Connection' }}
-        </button>
-        <div class="flex gap-2">
-          <button v-if="isEditing" class="btn-danger" @click="handleDelete">Delete</button>
-          <button class="px-4 py-2 text-foreground-secondary border border-border rounded hover:bg-surface-hover" @click="handleCancel">Cancel</button>
-          <button
-            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-            :disabled="isLoading || isTesting"
-            @click="handleSave"
-          >
-            {{ saveButtonText || 'Save' }}
-          </button>
-        </div>
-      </div>
-      <div v-if="testResult" class="mt-4 p-3 rounded" :class="testResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+      
+      <div v-if="testResult" class="mt-4 p-2.5 rounded border text-sm font-medium animate-in slide-in-from-top-2" 
+        :class="testResult.success ? 'bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'">
         {{ testResult.message }}
+      </div>
+    </ScrollView>
+
+    <div class="toolbar !bg-surface border-t border-border flex-none">
+      <button
+        class="btn-ghost"
+        :disabled="isTesting"
+        @click="testConnection"
+      >
+        <component :is="isTesting ? Loader : Zap" class="w-3.5 h-3.5" :class="{ 'animate-spin': isTesting }" />
+        {{ isTesting ? 'Testing...' : 'Test' }}
+      </button>
+
+      <div class="flex gap-2">
+        <button v-if="isEditing" class="btn-danger !bg-transparent !text-red-500 border-red-500 hover:!bg-red-500 hover:!text-white" @click="handleDelete">Delete</button>
+        <div class="toolbar-divider" v-if="isEditing"></div>
+        <button class="btn-ghost" @click="handleCancel">Cancel</button>
+        <button
+          class="btn-primary"
+          :disabled="isLoading || isTesting"
+          @click="handleSave"
+        >
+          {{ saveButtonText || 'Save Connection' }}
+        </button>
       </div>
     </div>
   </Dialog>
@@ -42,11 +53,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Zap } from 'lucide-vue-next'
+import { Zap, X, Server, Loader } from 'lucide-vue-next'
 import { useConnectionForm } from '../composables/useConnectionForm'
 import { UpdateConnection, CreateConnection, TestConnection, DeleteConnection } from 'wailsjs/go/main/App'
 import ConnectionForm from './connection/ConnectionForm.vue'
 import Dialog from './Dialog.vue'
+import ScrollView from './ScrollView.vue'
 
 const props = defineProps<{
   isOpen: boolean

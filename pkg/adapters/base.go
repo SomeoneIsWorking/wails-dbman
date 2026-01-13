@@ -21,6 +21,7 @@ type BaseAdapter interface {
 	GetSchema(database string) (*cache.SchemaInfo, error)
 	ExecuteQuery(query string, database string) ([]map[string]interface{}, error)
 	GetTableData(database, schema, tableName string, options map[string]interface{}) (*cache.TableDataResponse, error)
+	GetTableDataCount(database, schema, tableName string, options map[string]interface{}) (int, error)
 	GetProcedureDetails(database, schema, name string) (*cache.StoredProcedureInfo, error)
 }
 

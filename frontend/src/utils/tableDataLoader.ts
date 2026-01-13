@@ -1,61 +1,73 @@
-import { GetTableData, GetSchema } from "wailsjs/go/main/App";
+import { GetTableData, GetTableDataCount } from "wailsjs/go/main/App";
 import type { TableTab } from "../stores/tabsStore";
+import { useConnectionsStore } from "../stores/connectionsStore";
+import { isEqual } from "lodash-es";
 
 export async function loadTableData(tab: TableTab) {
-  tab.state = {
-    type: "loading",
-    activeTab: tab.state.activeTab,
-    page: tab.state.page,
-    pageSize: tab.state.pageSize,
-  };
+  tab.state.loading = true;
+  tab.state.error = null;
+
   try {
+    const connectionsStore = useConnectionsStore();
     const [schemaName, tableName] = tab.objectName.split(".");
 
-    // Get table schema to know column information
-    const schemaResponse = await GetSchema(
-      tab.connectionId,
-      tab.database,
-      false
+    // Find connection and table info from store instead of fetching
+    const connection = connectionsStore.connections.find(
+      (c) => c.id === tab.connectionId
+    );
+    const databaseInfo = connection?.databases.find(
+      (d) => d.name === tab.database
+    );
+    const tableInfo = databaseInfo?.tablesBySchema[schemaName]?.find(
+      (t) => t.name === tableName
     );
 
-    const tableInfo = schemaResponse.tables.find(
-      (t) => t.schema === schemaName && t.name === tableName
-    )!;
-
     if (!tableInfo) {
-      throw new Error(`Table ${tab.objectName} not found in schema`);
+      throw new Error(`Table ${tab.objectName} not found in schema cache`);
     }
 
-    // Get table data with pagination
-    const response = await GetTableData({
-      connectionId: tab.connectionId,
-      database: tab.database,
-      schema: schemaName,
-      tableName: tableName,
-      page: tab.state.page,
-      limit: tab.state.pageSize,
-    });
+    // Get table data and count separately
+    // Backend uses 1-based page, frontend uses 0-based
+    const promises: [Promise<any>, Promise<number> | null] = [
+      GetTableData({
+        connectionId: tab.connectionId,
+        database: tab.database,
+        schema: schemaName,
+        tableName: tableName,
+        page: tab.state.page + 1,
+        limit: tab.state.pageSize,
+        filters: tab.state.filters || [],
+      }),
+      null,
+    ];
+
+    // Only fetch count on initial load or when filters change
+    const filtersChanged = !isEqual(tab.state.filters, tab.state.lastFilters);
+    if (tab.state.totalRows === 0 || filtersChanged) {
+      promises[1] = GetTableDataCount({
+        connectionId: tab.connectionId,
+        database: tab.database,
+        schema: schemaName,
+        tableName: tableName,
+        filters: tab.state.filters || [],
+      });
+    }
+
+    const [response, totalRows] = await Promise.all(promises);
 
     response.results = response.results || [];
     console.log("Table data response:", response);
 
-    tab.state = {
-      type: "success",
-      data: response,
-      schema: tableInfo,
-      activeTab: tab.state.activeTab,
-      page: tab.state.page,
-      pageSize: tab.state.pageSize,
-    };
+    tab.state.data = response;
+    tab.state.schema = tableInfo as any;
+    if (totalRows !== null) {
+      tab.state.totalRows = totalRows;
+    }
+    tab.state.lastFilters = JSON.parse(JSON.stringify(tab.state.filters));
+    tab.state.loading = false;
   } catch (err) {
     console.error("Table data loading error:", err);
-    const errorMsg = (err as Error).message || "Unknown error occurred";
-    tab.state = {
-      type: "error",
-      error: errorMsg,
-      page: tab.state.page,
-      pageSize: tab.state.pageSize,
-      activeTab: tab.state.activeTab,
-    };
+    tab.state.error = (err as Error).message || "Unknown error occurred";
+    tab.state.loading = false;
   }
 }

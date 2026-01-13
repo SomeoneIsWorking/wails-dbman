@@ -4,6 +4,7 @@ import { loadViewData } from "../utils/viewDataLoader";
 import { loadProcedureData } from "../utils/procedureDataLoader";
 import type { cache } from "wailsjs/go/models";
 import { defineStore } from "pinia";
+import type { ColumnInfo } from "../types/schema";
 
 type CommonTab = {
   id: string;
@@ -36,52 +37,38 @@ export type ViewTab = {
 
 export type Tab = QueryTab | TableTab | ProcedureTab | ViewTab;
 
-export type DataState = {
-  tableData: any[];
-  tableColumns: string[];
-  totalRows: number;
-  currentPage: number;
-  pageSize: number;
+export type TableTabState = {
   loading: boolean;
-  error?: string;
-};
-
-type ErrorState = {
-  type: "error";
-  error: any;
-};
-
-type LoadingState = {
-  type: "loading";
-};
-
-type SuccessState<T> = {
-  type: "success";
-} & T;
-
-export type AnyState<T> = ErrorState | LoadingState | SuccessState<T>;
-
-export type TableTabState = AnyState<{
-  data: cache.TableDataResponse;
-  schema: cache.TableResponse;
-}> & {
+  error: string | null;
+  data: cache.TableDataResponse | null;
+  schema: cache.TableResponse | null;
   page: number;
   pageSize: number;
+  totalRows: number;
   activeTab: "data" | "schema";
+  filters: any[];
+  lastFilters?: any[];
 };
 
-export type ViewTabState = AnyState<{
-  data: cache.TableDataResponse;
-  columns: string[];
-}> & {
+export type ViewTabState = {
+  loading: boolean;
+  error: string | null;
+  data: cache.TableDataResponse | null;
+  columns: ColumnInfo[];
+  definition: string;
   page: number;
   pageSize: number;
+  totalRows: number;
+  activeTab: "data" | "definition" | "schema";
 };
 
-export type ProcedureTabState = AnyState<{
-  info: cache.StoredProcedureInfo;
+export type ProcedureTabState = {
+  loading: boolean;
+  error: string | null;
+  info: cache.StoredProcedureInfo | null;
   content: string;
-}>;
+  activeTab: "info" | "definition" | "query";
+};
 
 export type MessageEntry = {
   type: "info" | "warning" | "error" | "success";
@@ -129,10 +116,15 @@ export const useTabsStore = defineStore("tabs", () => {
       database,
       objectName: `${schema}.${tableName}`,
       state: {
+        loading: true,
+        error: null,
+        data: null,
+        schema: null,
         activeTab: "data",
-        type: "loading",
         page: 0,
+        totalRows: 0,
         pageSize: 100,
+        filters: [],
       },
     };
     addTab(tab, loadTableData);
@@ -153,9 +145,15 @@ export const useTabsStore = defineStore("tabs", () => {
       database,
       objectName: `${schema}.${viewName}`,
       state: {
-        type: "loading",
+        loading: true,
+        error: null,
+        data: null,
+        columns: [],
+        definition: "",
         page: 0,
         pageSize: 100,
+        totalRows: 0,
+        activeTab: "data",
       },
     };
     addTab(tab, loadViewData);
@@ -176,7 +174,11 @@ export const useTabsStore = defineStore("tabs", () => {
       database,
       objectName: `${schema}.${procedureName}`,
       state: {
-        type: "loading",
+        loading: true,
+        error: null,
+        info: null,
+        content: "",
+        activeTab: "info",
       },
     };
     addTab(tab, loadProcedureData);

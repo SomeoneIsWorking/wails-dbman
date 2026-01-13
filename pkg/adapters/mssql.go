@@ -385,6 +385,22 @@ func (a *MSSQLAdapter) ExecuteQuery(query string, database string) ([]map[string
 	return results, nil
 }
 
+func (a *MSSQLAdapter) buildWhereClause(filters []cache.Filter) (string, []interface{}) {
+	if len(filters) == 0 {
+		return "", nil
+	}
+	where := " WHERE "
+	args := []interface{}{}
+	for i, f := range filters {
+		if i > 0 {
+			where += " AND "
+		}
+		where += fmt.Sprintf("[%s] %s ?", f.Column, f.Operator)
+		args = append(args, f.Value)
+	}
+	return where, args
+}
+
 func (a *MSSQLAdapter) GetTableData(database, schema, tableName string, options map[string]interface{}) (*cache.TableDataResponse, error) {
 	page := 1
 	if p, ok := options["page"].(int); ok {
@@ -394,28 +410,69 @@ func (a *MSSQLAdapter) GetTableData(database, schema, tableName string, options 
 	if l, ok := options["limit"].(int); ok {
 		limit = l
 	}
-	offset := page * limit
-	query := fmt.Sprintf("SELECT * FROM %s.%s ORDER BY (SELECT NULL) OFFSET %d ROWS FETCH NEXT %d ROWS ONLY", schema, tableName, offset, limit)
+	filters, _ := options["filters"].([]cache.Filter)
+
+	whereClause, args := a.buildWhereClause(filters)
+	offset := (page - 1) * limit
+	query := fmt.Sprintf("SELECT * FROM %s.%s%s ORDER BY (SELECT NULL) OFFSET %d ROWS FETCH NEXT %d ROWS ONLY", schema, tableName, whereClause, offset, limit)
 	log.Printf("Executing query: %s", query)
-	results, err := a.ExecuteQuery(query, database)
+
+	db, err := a.connect()
 	if err != nil {
 		return nil, err
 	}
-	countQuery := fmt.Sprintf("SELECT COUNT(*) as total FROM %s.%s", schema, tableName)
-	countResults, err := a.ExecuteQuery(countQuery, database)
+
+	rows, err := db.Raw(query, args...).Rows()
 	if err != nil {
 		return nil, err
 	}
-	total := 0
-	if len(countResults) > 0 {
-		if t, ok := countResults[0]["total"].(int64); ok {
-			total = int(t)
+	defer rows.Close()
+
+	columns, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	for rows.Next() {
+		values := make([]interface{}, len(columns))
+		valuePtrs := make([]interface{}, len(columns))
+		for i := range values {
+			valuePtrs[i] = &values[i]
 		}
+		err = rows.Scan(valuePtrs...)
+		if err != nil {
+			return nil, err
+		}
+		row := make(map[string]interface{})
+		for i, col := range columns {
+			row[col] = values[i]
+		}
+		results = append(results, row)
 	}
+
 	return &cache.TableDataResponse{
 		Results: results,
-		Total:   total,
 	}, nil
+}
+
+func (a *MSSQLAdapter) GetTableDataCount(database, schema, tableName string, options map[string]interface{}) (int, error) {
+	filters, _ := options["filters"].([]cache.Filter)
+	whereClause, args := a.buildWhereClause(filters)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) as total FROM %s.%s%s", schema, tableName, whereClause)
+
+	db, err := a.connect()
+	if err != nil {
+		return 0, err
+	}
+
+	var total int64
+	err = db.Raw(countQuery, args...).Scan(&total).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return int(total), nil
 }
 
 func (a *MSSQLAdapter) GetProcedureDetails(database, schema, name string) (*cache.StoredProcedureInfo, error) {

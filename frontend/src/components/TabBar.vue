@@ -1,28 +1,29 @@
 <template>
-  <div class="flex">
-    <div
-      v-for="tab in tabsStore.tabs"
-      :key="tab.id"
-      :class="[
-        'flex items-center px-3 py-2 border-r border-border cursor-pointer hover:bg-surface-hover min-w-0 flex-shrink-0',
-        tabsStore.activeTab === tab
-          ? 'bg-blue-50 dark:bg-blue-900/20 border-b-2 border-b-primary text-primary'
-          : 'text-foreground-secondary',
-      ]"
-      @click="tabsStore.setActiveTab(tab)"
+  <div
+    v-for="tab in tabsStore.tabs"
+    :key="tab.id"
+    :title="tab.title"
+    class="p-2"
+    :class="[
+      'flex items-center gap-1.5 border-r border-border/50 cursor-pointer hover:bg-surface-hover/50 transition-all select-none',
+      tabsStore.activeTab === tab
+        ? 'bg-surface shadow-[0_-2px_0_inset_rgb(var(--color-primary))] text-foreground'
+        : 'bg-surface-hover/30 text-foreground-secondary',
+    ]"
+    @click="tabsStore.setActiveTab(tab)"
+  >
+    <component
+      :is="getTabIcon(tab.type)"
+      class="w-3.5 h-3.5 flex-shrink-0"
+      :class="tabsStore.activeTab === tab ? 'text-primary' : 'text-foreground-secondary/70'"
+    />
+    <span class="truncate text-sm font-medium flex-1">{{ tab.title }}</span>
+    <button
+      class="p-0.5 hover:bg-red-500/10 hover:text-red-500 rounded flex-shrink-0 transition-colors"
+      @click.stop="tabsStore.closeTab(tab)"
     >
-      <component
-        :is="getTabIcon(tab.type)"
-        class="w-4 h-4 mr-2 flex-shrink-0"
-      />
-      <span class="truncate text-sm">{{ tab.title }}</span>
-      <button
-        class="ml-2 p-1 hover:bg-surface-hover rounded flex-shrink-0"
-        @click.stop="tabsStore.closeTab(tab)"
-      >
-        <X class="w-3 h-3" />
-      </button>
-    </div>
+      <X class="w-2.5 h-2.5" />
+    </button>
   </div>
 </template>
 

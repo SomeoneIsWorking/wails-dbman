@@ -2,9 +2,8 @@ import { AnalyzeProcedure } from "wailsjs/go/main/App";
 import type { ProcedureTab } from "../stores/tabsStore";
 
 export async function loadProcedureData(tab: ProcedureTab) {
-  tab.state = {
-    type: "loading",
-  };
+  tab.state.loading = true;
+  tab.state.error = null;
   try {
     const [schema, procedureName] = tab.objectName.split(".");
 
@@ -22,17 +21,12 @@ export async function loadProcedureData(tab: ProcedureTab) {
       content = `-- Procedure definition not available\n-- ${tab.objectName}`;
     }
 
-    tab.state = {
-      type: "success",
-      info,
-      content,
-    };
+    tab.state.info = info;
+    tab.state.content = content;
+    tab.state.loading = false;
   } catch (err) {
     console.error("Procedure data loading error:", err);
-    const errorMsg = (err as Error).message || "Unknown error occurred";
-    tab.state = {
-      type: "error",
-      error: errorMsg,
-    };
+    tab.state.error = (err as Error).message || "Unknown error occurred";
+    tab.state.loading = false;
   }
 }
