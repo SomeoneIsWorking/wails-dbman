@@ -34,7 +34,7 @@
               class="text-[10px] font-black uppercase tracking-widest text-foreground-secondary"
               >Results</span
             >
-            <div class="toolbar-divider !h-3"></div>
+            <div class="h-3 w-px bg-border mx-1"></div>
             <span
               class="text-[10px] font-bold text-foreground-secondary opacity-60 uppercase tracking-tighter"
               >0 Rows Affected</span
