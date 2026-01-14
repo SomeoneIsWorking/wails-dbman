@@ -14,12 +14,12 @@
   >
     <component
       :is="getTabIcon(tab.type)"
-      class="w-3.5 h-3.5 flex-shrink-0"
+      class="w-3.5 h-3.5"
       :class="tabsStore.activeTab === tab ? 'text-primary' : 'text-foreground-secondary/70'"
     />
     <span class="truncate text-sm font-medium flex-1">{{ tab.title }}</span>
     <button
-      class="p-0.5 hover:bg-red-500/10 hover:text-red-500 rounded flex-shrink-0 transition-colors"
+      class="p-0.5 hover:bg-red-500/10 hover:text-red-500 rounded transition-colors"
       @click.stop="tabsStore.closeTab(tab)"
     >
       <X class="w-2.5 h-2.5" />

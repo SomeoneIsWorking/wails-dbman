@@ -5,7 +5,7 @@
       :class="expanded ? 'bg-surface-hover rounded-bl-none' : ''"
       @click="$emit('toggle')"
     >
-      <div class="w-4 flex items-center shrink-0">
+      <div class="w-4 flex items-center">
         <component
           :is="expanded ? ChevronDown : ChevronRight"
           class="w-3 h-3 text-foreground-secondary group-hover/item:text-foreground"

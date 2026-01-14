@@ -73,7 +73,7 @@
             @mouseenter="selectedIndex = index"
           >
             <div
-              class="w-7 h-7 rounded flex items-center justify-center shrink-0 border border-border/50"
+              class="w-7 h-7 rounded flex items-center justify-center border border-border/50"
               :class="getIconClass(result.type)"
             >
               <component :is="getIcon(result.type)" class="w-3.5 h-3.5" />

@@ -23,7 +23,7 @@
 
       <!-- Result Area -->
       <div
-        class="border-t border-border bg-surface flex flex-col shrink-0"
+        class="border-t border-border bg-surface flex flex-col"
         :style="{ height: resultHeight + 'px' }"
       >
         <div

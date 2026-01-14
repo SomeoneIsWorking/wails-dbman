@@ -4,7 +4,7 @@
     <div class="toolbar px-2 py-1">
       <div class="flex items-center gap-3 min-w-0">
         <!-- Icon and Title -->
-        <div class="flex items-center gap-1.5 shrink-0">
+        <div class="flex items-center gap-1.5">
           <component 
             v-if="icon" 
             :is="icon" 
@@ -16,7 +16,7 @@
           </h3>
         </div>
 
-        <div v-if="tabs && tabs.length > 0" class="toolbar-divider shrink-0"></div>
+        <div v-if="tabs && tabs.length > 0" class="toolbar-divider"></div>
 
         <!-- Tabs -->
         <nav v-if="tabs && tabs.length > 0" class="tab-nav">
@@ -35,7 +35,7 @@
       </div>
 
       <!-- Actions Slot -->
-      <div class="toolbar-group shrink-0 ml-4">
+      <div class="toolbar-group ml-4">
         <slot name="actions" />
       </div>
     </div>

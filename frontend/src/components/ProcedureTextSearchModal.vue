@@ -52,7 +52,7 @@
             @click="selectResult"
             @mouseenter="selectedIndex = index"
           >
-            <div class="w-8 h-8 rounded bg-orange-500/10 flex items-center justify-center shrink-0 mt-0.5">
+            <div class="w-8 h-8 rounded bg-orange-500/10 flex items-center justify-center mt-0.5">
               <Settings class="w-4 h-4 text-orange-500" />
             </div>
             
