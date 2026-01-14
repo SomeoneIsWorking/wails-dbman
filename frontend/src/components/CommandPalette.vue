@@ -31,8 +31,8 @@
         </div>
       </div>
 
-      <div
-        class="flex-1 overflow-y-auto min-h-[300px] max-h-[60vh] bg-surface"
+      <OverlayScrollbarsComponent
+        class="flex-1 min-h-[300px] max-h-[60vh] bg-surface"
       >
         <div
           v-if="isLoading"
@@ -100,7 +100,7 @@
             </div>
           </button>
         </div>
-      </div>
+      </OverlayScrollbarsComponent>
 
       <div
         v-if="results.length > 0"
@@ -137,6 +137,7 @@ import {
 } from "lucide-vue-next";
 import { Search as SearchAPI } from "wailsjs/go/main/App";
 import { SearchResult } from "@/types/wails";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
 
 const isOpen = ref(false);
 const search = ref("");

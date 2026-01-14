@@ -10,7 +10,7 @@
       </button>
     </div>
 
-    <ScrollView class="p-4 min-h-0 flex-1">
+    <OverlayScrollbarsComponent class="p-4 min-h-0 flex-1">
       <ConnectionForm
         :is-editing="isEditing"
         :is-loading="isLoading"
@@ -23,7 +23,7 @@
         :class="testResult.success ? 'bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'">
         {{ testResult.message }}
       </div>
-    </ScrollView>
+    </OverlayScrollbarsComponent>
 
     <div class="toolbar !bg-surface border-t border-border flex-none">
       <button
@@ -58,7 +58,7 @@ import { useConnectionForm } from '../composables/useConnectionForm'
 import { UpdateConnection, CreateConnection, TestConnection, DeleteConnection } from 'wailsjs/go/main/App'
 import ConnectionForm from './connection/ConnectionForm.vue'
 import Dialog from './Dialog.vue'
-import ScrollView from './ScrollView.vue'
+import { OverlayScrollbarsComponent } from 'overlayscrollbars-vue'
 
 const props = defineProps<{
   isOpen: boolean

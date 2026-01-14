@@ -25,7 +25,10 @@
       />
     </button>
   </div>
-  <ScrollView class="p-2 text-foreground-secondary" container-class="flex [&>div]:flex-1">
+  <OverlayScrollbarsComponent
+    class="p-2 text-foreground-secondary"
+    container-class="flex [&>div]:flex-1"
+  >
     <CollapsibleItem
       v-for="conn in connections"
       :key="conn.id"
@@ -186,9 +189,7 @@
               v-for="schema in Object.keys(db.proceduresBySchema)"
               :key="schema"
               class="ml-1 mt-1"
-              :expanded="
-                expanded[`procedure-${conn.id}-${db.name}-${schema}`]
-              "
+              :expanded="expanded[`procedure-${conn.id}-${db.name}-${schema}`]"
               @toggle="
                 expanded[`procedure-${conn.id}-${db.name}-${schema}`] =
                   !expanded[`procedure-${conn.id}-${db.name}-${schema}`]
@@ -227,7 +228,7 @@
         </CollapsibleItem>
       </CollapsibleItem>
     </CollapsibleItem>
-  </ScrollView>
+  </OverlayScrollbarsComponent>
 
   <ConnectionDialog
     :is-open="showEditDialog"
@@ -262,7 +263,7 @@ import { useConnectionForm } from "@/composables/useConnectionForm";
 
 import CollapsibleItem from "./CollapsibleItem.vue";
 import ConnectionDialog from "./ConnectionDialog.vue";
-import ScrollView from "./ScrollView.vue";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
 
 const connectionsStore = useConnectionsStore();
 const connections = computed(() => connectionsStore.connections);
