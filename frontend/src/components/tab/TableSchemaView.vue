@@ -3,80 +3,53 @@
     <StateWrapper :loading="tableState.loading" :error="tableState.error">
       <div v-if="tableState.schema" class="space-y-6">
         <!-- Columns -->
-        <div>
-          <h4
-            class="text-lg font-semibold mb-3 flex items-center gap-2 text-foreground"
-          >
+        <div class="schema-section">
+          <h4 class="schema-header">
             <Database class="w-5 h-5 text-blue-600" />
             Columns ({{ tableState.schema.columns.length }})
           </h4>
-          <div class="border border-border rounded-lg shadow-sm">
-            <table class="min-w-full border-separate border-spacing-0">
-              <thead class="bg-surface-hover">
-                <tr class="uppercase">
-                  <th
-                    class="top-0 z-10 px-4 py-2 border-b border-border bg-surface-hover"
-                  >
-                    Name
-                  </th>
-                  <th
-                    class="top-0 z-10 px-4 py-2 border-b border-border bg-surface-hover"
-                  >
-                    Type
-                  </th>
-                  <th
-                    class="top-0 z-10 px-4 py-2 border-b border-border bg-surface-hover"
-                  >
-                    Nullable
-                  </th>
-                  <th
-                    class="top-0 z-10 px-4 py-2 border-b border-border bg-surface-hover"
-                  >
-                    Default
-                  </th>
-                  <th
-                    class="top-0 z-10 px-4 py-2 border-b border-border bg-surface-hover"
-                  >
-                    Primary
-                  </th>
-                  <th
-                    class="top-0 z-10 px-4 py-2 border-b border-border bg-surface-hover"
-                  >
-                    Foreign
-                  </th>
+          <div class="schema-table-container">
+            <table class="schema-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Nullable</th>
+                  <th>Default</th>
+                  <th>Primary</th>
+                  <th>Foreign</th>
                 </tr>
               </thead>
-              <tbody class="bg-surface divide-y divide-border">
+              <tbody class="bg-surface divide-y divide-border/50">
                 <tr
                   v-for="column in tableState.schema.columns"
                   :key="column.name"
-                  class="hover:bg-surface-hover"
                 >
-                  <td class="px-4 py-2 text-sm font-medium text-foreground">
+                  <td class="font-medium text-foreground">
                     {{ column.name }}
                   </td>
-                  <td class="px-4 py-2 text-sm text-foreground-secondary">
+                  <td class="text-foreground-secondary">
                     {{ column.type }}
                   </td>
-                  <td class="px-4 py-2 text-sm text-foreground-secondary">
+                  <td>
                     <span
-                      :class="column.nullable ? 'text-success' : 'text-error'"
+                      :class="column.nullable ? 'badge-success' : 'badge-error'"
                     >
                       {{ column.nullable ? "Yes" : "No" }}
                     </span>
                   </td>
-                  <td class="px-4 py-2 text-sm text-foreground-secondary">
+                  <td class="text-foreground-secondary">
                     {{ column.defaultValue || "-" }}
                   </td>
-                  <td class="px-4 py-2 text-sm text-foreground-secondary">
-                    <span v-if="column.primary" class="text-primary font-medium"
-                      >✓</span
+                  <td>
+                    <span v-if="column.primary" class="badge-accent"
+                      >Primary</span
                     >
                     <span v-else>-</span>
                   </td>
-                  <td class="px-4 py-2 text-sm text-foreground-secondary">
-                    <span v-if="column.foreign" class="text-accent font-medium"
-                      >✓</span
+                  <td>
+                    <span v-if="column.foreign" class="badge-info"
+                      >Foreign</span
                     >
                     <span v-else>-</span>
                   </td>
