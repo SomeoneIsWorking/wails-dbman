@@ -8,7 +8,9 @@
       class="bg-surface rounded shadow-2xl w-full max-w-xl border border-border flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
       @click.stop
     >
-      <div class="toolbar !bg-surface-hover/20 !border-b !h-12 px-4">
+      <div
+        class="flex items-center justify-between border-b border-border bg-surface-hover/20 h-12 px-4"
+      >
         <div class="flex items-center flex-1">
           <Search class="w-4 h-4 mr-3 text-foreground-secondary" />
           <input
@@ -104,7 +106,7 @@
 
       <div
         v-if="results.length > 0"
-        class="toolbar !bg-surface-hover/10 !border-t px-4 !h-8 text-sm font-bold uppercase tracking-widest text-foreground-secondary/70"
+        class="flex items-center justify-between border-t border-border bg-surface-hover/10 px-4 h-8 text-sm font-bold uppercase tracking-widest text-foreground-secondary/70"
       >
         <span>{{ results.length }} Results</span>
         <div class="flex-1"></div>

@@ -5,13 +5,15 @@
     icon-class="text-green-500"
     :tabs="[
       { id: 'data', label: 'Data' },
-      { id: 'schema', label: 'Schema' }
+      { id: 'schema', label: 'Schema' },
     ]"
     v-model:activeTab="tableState!.activeTab"
   >
     <template #actions v-if="tableState!.activeTab === 'data'">
       <div class="flex items-center gap-2">
-        <label class="text-xs text-foreground-secondary whitespace-nowrap">Rows:</label>
+        <label class="text-xs text-foreground-secondary whitespace-nowrap"
+          >Rows:</label
+        >
         <select
           v-model="tableState!.pageSize"
           @change="changePageSize"
@@ -22,8 +24,8 @@
           <option :value="500">500</option>
           <option :value="1000">1000</option>
         </select>
-        
-        <div class="toolbar-divider"></div>
+
+        <div class="h-4 w-px bg-border mx-1"></div>
 
         <div class="flex items-center gap-1">
           <button
@@ -34,7 +36,9 @@
           >
             <ChevronLeft class="w-4 h-4" />
           </button>
-          <span class="text-sm font-medium text-foreground-secondary text-center">
+          <span
+            class="text-sm font-medium text-foreground-secondary text-center"
+          >
             {{ tableState!.page + 1 }} / {{ totalPages || 1 }}
           </span>
           <button
@@ -47,7 +51,7 @@
           </button>
         </div>
 
-        <div class="toolbar-divider"></div>
+        <div class="h-4 w-px bg-border mx-1"></div>
 
         <button class="btn-ghost" @click="refreshData">
           <RefreshCw class="w-3.5 h-3.5" />
@@ -60,10 +64,7 @@
       </div>
     </template>
 
-    <TableDataView
-      v-if="tableState!.activeTab === 'data'"
-      :tab="tab"
-    />
+    <TableDataView v-if="tableState!.activeTab === 'data'" :tab="tab" />
     <TableSchemaView
       v-else-if="tableState!.activeTab === 'schema'"
       :tab="tab"
@@ -72,29 +73,35 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { Table as TableIcon, RefreshCw, Download, ChevronLeft, ChevronRight } from 'lucide-vue-next'
-import TableDataView from './TableDataView.vue'
-import TableSchemaView from './TableSchemaView.vue'
-import TabView from '../TabView.vue'
-import type { TableTab } from '../../stores/tabsStore'
-import { loadTableData } from '@/utils/tableDataLoader'
+import { computed } from "vue";
+import {
+  Table as TableIcon,
+  RefreshCw,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-vue-next";
+import TableDataView from "./TableDataView.vue";
+import TableSchemaView from "./TableSchemaView.vue";
+import TabView from "../TabView.vue";
+import type { TableTab } from "../../stores/tabsStore";
+import { loadTableData } from "@/utils/tableDataLoader";
 
 interface Props {
   tab: TableTab;
 }
 
-const props = defineProps<Props>()
+const props = defineProps<Props>();
 
-const tableState = computed(() => props.tab.state)
+const tableState = computed(() => props.tab.state);
 
 const totalPages = computed(() =>
   Math.ceil(tableState.value.totalRows / tableState.value.pageSize)
 );
 
 const refreshData = () => {
-  loadTableData(props.tab)
-}
+  loadTableData(props.tab);
+};
 
 const changePageSize = () => {
   tableState.value.page = 0;
