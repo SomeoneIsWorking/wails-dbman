@@ -3,7 +3,7 @@
     class="p-3 border-b border-border bg-surface-hover flex items-center gap-1 text-foreground"
   >
     <h2 class="text-sm font-semibold flex items-center gap-2">
-      <FolderTree class="w-4 h-4 flex-shrink-0" />
+      <FolderTree class="w-4 h-4" />
       Database Explorer
     </h2>
     <div class="flex-1"></div>
@@ -12,7 +12,7 @@
       class="p-1 hover:bg-surface-hover rounded"
       title="Refresh"
     >
-      <RefreshCw class="w-4 h-4 flex-shrink-0" />
+      <RefreshCw class="w-4 h-4" />
     </button>
     <button
       @click="groupBySchema = !groupBySchema"
@@ -21,13 +21,12 @@
     >
       <component
         :is="groupBySchema ? Group : List"
-        class="w-4 h-4 flex-shrink-0"
+        class="w-4 h-4"
       />
     </button>
   </div>
   <OverlayScrollbarsComponent
-    class="p-2 text-foreground-secondary"
-    container-class="flex [&>div]:flex-1"
+    class="p-2 text-foreground-secondary flex-grow min-h-0"
   >
     <CollapsibleItem
       v-for="conn in connections"
@@ -99,7 +98,7 @@
                 class="flex ml-1 mt-1 items-center cursor-pointer hover:bg-surface-hover p-1 rounded"
                 @click="openTable(conn.id, db.name, table)"
               >
-                <Table class="w-3 h-3 mr-2 text-success flex-shrink-0" />
+                <Table class="w-3 h-3 mr-2 text-success" />
                 <span>{{ table.name }}</span>
               </div>
             </CollapsibleItem>
@@ -111,7 +110,7 @@
               class="flex ml- mt-1 items-center cursor-pointer hover:bg-surface-hover p-1 rounded"
               @click="openTable(conn.id, db.name, table)"
             >
-              <Table class="w-3 h-3 mr-2 text-success flex-shrink-0" />
+              <Table class="w-3 h-3 mr-2 text-success" />
               <span>{{ table.schema }}.{{ table.name }}</span>
             </div>
           </template>
@@ -152,7 +151,7 @@
                 class="flex ml-1 mt-1 items-center cursor-pointer hover:bg-surface-hover p-1 rounded text-xs"
                 @click="openView(conn.id, db.name, view)"
               >
-                <Eye class="w-3 h-3 mr-2 text-accent flex-shrink-0" />
+                <Eye class="w-3 h-3 mr-2 text-accent" />
                 <span>{{ view.name }}</span>
               </div>
             </CollapsibleItem>
@@ -164,7 +163,7 @@
               class="flex ml-1 mt-1 items-center cursor-pointer hover:bg-surface-hover p-1 rounded text-xs"
               @click="openView(conn.id, db.name, view)"
             >
-              <Eye class="w-3 h-3 mr-2 text-accent flex-shrink-0" />
+              <Eye class="w-3 h-3 mr-2 text-accent" />
               <span>{{ view.schema }}.{{ view.name }}</span>
             </div>
           </template>
@@ -206,7 +205,7 @@
                   class="flex items-center cursor-pointer hover:bg-surface-hover p-1 rounded text-xs"
                   @click="openProcedure(conn.id, db.name, proc)"
                 >
-                  <Settings class="w-3 h-3 mr-2 text-warning flex-shrink-0" />
+                  <Settings class="w-3 h-3 mr-2 text-warning" />
                   <span>{{ proc.name }}</span>
                 </div>
               </div>
@@ -220,7 +219,7 @@
                 class="flex ml-2 items-center cursor-pointer hover:bg-surface-hover p-1 rounded text-xs"
                 @click="openProcedure(conn.id, db.name, proc)"
               >
-                <Settings class="w-3 h-3 mr-2 text-warning flex-shrink-0" />
+                <Settings class="w-3 h-3 mr-2 text-warning" />
                 <span>{{ proc.schema }}.{{ proc.name }}</span>
               </div>
             </div>

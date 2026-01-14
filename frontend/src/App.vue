@@ -2,16 +2,11 @@
   <div class="h-screen bg-background text-foreground flex">
     <!-- Main Layout -->
     <!-- Left Sidebar - Database Explorer -->
-    <aside
-      class="border-r border-border flex flex-col shrink-0"
-      :style="{ width: sidebarWidth + 'px' }"
-    >
-      <DatabaseExplorer />
-    </aside>
-    <div
-      class="w-1 bg-border/50 cursor-col-resize hover:bg-primary/50 transition-colors"
-      @mousedown="startResize"
-    ></div>
+    <Resizable horizontal v-model:width="sidebarWidth" :min="250" :max="600">
+      <aside class="border-r border-border flex flex-col min-w-0 min-h-0">
+        <DatabaseExplorer />
+      </aside>
+    </Resizable>
     <div class="flex flex-1 flex-col min-w-0">
       <!-- Top Toolbar -->
       <header class="toolbar shadow-sm z-50 h-10 justify-stretch">
@@ -70,6 +65,7 @@ import { Search, Plus, Sun, Moon, FileCode, PlusCircle } from "lucide-vue-next";
 import CommandPalette from "./components/CommandPalette.vue";
 import ProcedureTextSearchModal from "./components/ProcedureTextSearchModal.vue";
 import DatabaseExplorer from "./components/DatabaseExplorer.vue";
+import Resizable from "./components/Resizable.vue";
 import TabBar from "./components/TabBar.vue";
 import TabContent from "./components/TabContent.vue";
 import { useTabsStore } from "./stores/tabsStore";
@@ -84,28 +80,6 @@ const tabsStore = useTabsStore();
 const themeStore = useThemeStore();
 
 const sidebarWidth = ref(320);
-const isResizing = ref(false);
-
-const startResize = () => {
-  isResizing.value = true;
-  document.addEventListener("mousemove", resize);
-  document.addEventListener("mouseup", stopResize);
-};
-
-const resize = (e: MouseEvent) => {
-  if (isResizing.value) {
-    const newWidth = e.clientX;
-    if (newWidth >= 200 && newWidth <= 600) {
-      sidebarWidth.value = newWidth;
-    }
-  }
-};
-
-const stopResize = () => {
-  isResizing.value = false;
-  document.removeEventListener("mousemove", resize);
-  document.removeEventListener("mouseup", stopResize);
-};
 
 const createNewQuery = () => {
   tabsStore.addQueryTab(

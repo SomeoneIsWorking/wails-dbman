@@ -7,7 +7,7 @@
     >
       <div class="flex items-center gap-2 min-w-0">
         <div
-          class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center shrink-0"
+          class="w-8 h-8 rounded bg-primary/10 flex items-center justify-center"
         >
           <Server class="w-4 h-4 text-primary" />
         </div>
@@ -67,7 +67,7 @@
             class="px-2 py-1 text-sm font-medium border border-border/40 rounded hover:bg-primary/5 hover:border-primary/30 text-left flex items-center gap-1.5 truncate group/db transition-all"
           >
             <Database
-              class="w-3 h-3 text-foreground-secondary group-hover/db:text-primary shrink-0"
+              class="w-3 h-3 text-foreground-secondary group-hover/db:text-primary"
             />
             <span class="truncate">{{ db }}</span>
           </button>

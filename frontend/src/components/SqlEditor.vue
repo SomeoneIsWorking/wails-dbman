@@ -35,13 +35,13 @@
     </div>
     
     <!-- Compact Validation Messages -->
-    <div v-if="validationStatus && !validationStatus.isValid" class="bg-red-500/5 border-t border-red-500/20 px-3 py-1.5 shrink-0 animate-in slide-in-from-bottom-1">
+    <div v-if="validationStatus && !validationStatus.isValid" class="bg-red-500/5 border-t border-red-500/20 px-3 py-1.5 animate-in slide-in-from-bottom-1">
       <div 
         v-for="(error, index) in validationStatus.errors" 
         :key="index"
         class="flex items-start gap-2 text-sm"
       >
-        <AlertTriangle class="w-3.5 h-3.5 text-red-500 mt-0.5 shrink-0" />
+        <AlertTriangle class="w-3.5 h-3.5 text-red-500 mt-0.5" />
         <div class="flex-1 min-w-0">
           <span class="text-red-600 dark:text-red-400 font-bold uppercase mr-2">Error:</span>
           <span class="text-foreground font-medium">{{ error.message }}</span>
