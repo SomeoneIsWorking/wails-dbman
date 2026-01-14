@@ -15,16 +15,9 @@ type SearchResult struct {
 	Database     string `json:"database"`
 	Schema       string `json:"schema,omitempty"`
 	ObjectName   string `json:"objectName,omitempty"`
-}
-
-type ProcedureSearchResult struct {
-	ConnectionID   string `json:"connectionId"`
-	ConnectionName string `json:"connectionName"`
-	Database       string `json:"database"`
-	Type           string `json:"type"`
-	Name           string `json:"name"`
-	Definition     string `json:"definition"`
-	MatchedText    string `json:"matchedText,omitempty"`
+	MatchedText  string `json:"matchedText,omitempty"`
+	MatchReason  string `json:"matchReason,omitempty"`
+	LineNumber   int    `json:"lineNumber,omitempty"`
 }
 
 func Search(query string, connectionId, database string) ([]SearchResult, error) {
@@ -40,18 +33,34 @@ func Search(query string, connectionId, database string) ([]SearchResult, error)
 			continue
 		}
 
-		var databases []string
+		// Collect target databases for this connection
+		dbMap := make(map[string]bool)
+
 		if database != "" {
-			databases = []string{database}
+			dbMap[database] = true
 		} else {
-			cachedDbs, err := cache.GetCachedDatabases(conn.ID)
-			if err != nil || cachedDbs == nil {
-				continue
+			// Add default database if set
+			if conn.Database != nil && *conn.Database != "" {
+				dbMap[*conn.Database] = true
 			}
-			databases = cachedDbs.Databases
+
+			// Add any databases with cached schemas
+			var schemas []cache.CachedSchema
+			cache.DB.Where("connection_id = ?", conn.ID).Find(&schemas)
+			for _, s := range schemas {
+				dbMap[s.Database] = true
+			}
+
+			// Add any databases in the cached database list
+			cachedDbs, _ := cache.GetCachedDatabases(conn.ID)
+			if cachedDbs != nil {
+				for _, dbName := range cachedDbs.Databases {
+					dbMap[dbName] = true
+				}
+			}
 		}
 
-		for _, db := range databases {
+		for db := range dbMap {
 			schema, err := cache.GetCachedSchema(conn.ID, db)
 			if err != nil || schema == nil {
 				continue
@@ -64,42 +73,16 @@ func Search(query string, connectionId, database string) ([]SearchResult, error)
 	return results, nil
 }
 
-func ProcedureSearch(query string) ([]ProcedureSearchResult, error) {
-	var results []ProcedureSearchResult
-
-	connections, err := cache.GetConnections()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, conn := range connections {
-		cachedDbs, err := cache.GetCachedDatabases(conn.ID)
-		if err != nil || cachedDbs == nil {
-			continue
-		}
-
-		dbs := cachedDbs.Databases
-
-		for _, db := range dbs {
-			schema, err := cache.GetCachedSchema(conn.ID, db)
-			if err != nil || schema == nil {
-				continue
-			}
-
-			searchInProcedures(conn, db, schema, query, &results)
-		}
-	}
-
-	return results, nil
-}
-
 func searchInSchema(conn cache.Connection, database string, schema *cache.SchemaResponse, query string, results *[]SearchResult) {
+	queryLower := strings.ToLower(query)
+
 	// Search tables
 	for _, table := range schema.Tables {
 		tablePath := conn.Name + "/" + database + "." + table.Schema + "." + table.Name
 		tableFullName := table.Schema + "." + table.Name
 
-		if fuzzyMatch(table.Name, query) || fuzzyMatch(tableFullName, query) || fuzzyMatch(tablePath, query) {
+		// Name match
+		if fuzzyMatch(table.Name, query) || fuzzyMatch(tableFullName, query) {
 			*results = append(*results, SearchResult{
 				ID:           "table-" + tablePath,
 				Name:         table.Name,
@@ -110,6 +93,87 @@ func searchInSchema(conn cache.Connection, database string, schema *cache.Schema
 				Schema:       table.Schema,
 				ObjectName:   table.Name,
 			})
+			continue
+		}
+
+		// Column match
+		for _, col := range table.Columns {
+			if fuzzyMatch(col.Name, query) {
+				*results = append(*results, SearchResult{
+					ID:           "table-col-" + tablePath + "-" + col.Name,
+					Name:         table.Name,
+					Path:         tablePath,
+					Type:         "table",
+					ConnectionID: conn.ID,
+					Database:     database,
+					Schema:       table.Schema,
+					ObjectName:   table.Name,
+					MatchedText:  col.Name,
+					MatchReason:  "Column match",
+				})
+				break // Found a column, no need to check other columns for the same table
+			}
+		}
+	}
+
+	// Search views
+	for _, view := range schema.Views {
+		viewPath := conn.Name + "/" + database + "." + view.Schema + "." + view.Name
+		viewFullName := view.Schema + "." + view.Name
+
+		// Name match
+		if fuzzyMatch(view.Name, query) || fuzzyMatch(viewFullName, query) {
+			*results = append(*results, SearchResult{
+				ID:           "view-" + viewPath,
+				Name:         view.Name,
+				Path:         viewPath,
+				Type:         "view",
+				ConnectionID: conn.ID,
+				Database:     database,
+				Schema:       view.Schema,
+				ObjectName:   view.Name,
+			})
+			continue
+		}
+
+		// Definition match
+		if view.Definition != nil {
+			defLower := strings.ToLower(*view.Definition)
+			if matchIndex := strings.Index(defLower, queryLower); matchIndex != -1 {
+				*results = append(*results, SearchResult{
+					ID:           "view-def-" + viewPath,
+					Name:         view.Name,
+					Path:         viewPath,
+					Type:         "view",
+					ConnectionID: conn.ID,
+					Database:     database,
+					Schema:       view.Schema,
+					ObjectName:   view.Name,
+					MatchedText:  extractContext(*view.Definition, matchIndex, len(query)),
+					MatchReason:  "Definition match",
+					LineNumber:   strings.Count((*view.Definition)[:matchIndex], "\n") + 1,
+				})
+				continue
+			}
+		}
+
+		// Column match
+		for _, col := range view.Columns {
+			if fuzzyMatch(col.Name, query) {
+				*results = append(*results, SearchResult{
+					ID:           "view-col-" + viewPath + "-" + col.Name,
+					Name:         view.Name,
+					Path:         viewPath,
+					Type:         "view",
+					ConnectionID: conn.ID,
+					Database:     database,
+					Schema:       view.Schema,
+					ObjectName:   view.Name,
+					MatchedText:  col.Name,
+					MatchReason:  "Column match",
+				})
+				break
+			}
 		}
 	}
 
@@ -118,7 +182,8 @@ func searchInSchema(conn cache.Connection, database string, schema *cache.Schema
 		procPath := conn.Name + "/" + database + "." + proc.Schema + "." + proc.Name
 		procFullName := proc.Schema + "." + proc.Name
 
-		if fuzzyMatch(proc.Name, query) || fuzzyMatch(procFullName, query) || fuzzyMatch(procPath, query) {
+		// Name match
+		if fuzzyMatch(proc.Name, query) || fuzzyMatch(procFullName, query) {
 			*results = append(*results, SearchResult{
 				ID:           "proc-" + procPath,
 				Name:         proc.Name,
@@ -129,32 +194,88 @@ func searchInSchema(conn cache.Connection, database string, schema *cache.Schema
 				Schema:       proc.Schema,
 				ObjectName:   proc.Name,
 			})
+			continue
+		}
+
+		// Definition match
+		if proc.Definition != nil {
+			defLower := strings.ToLower(*proc.Definition)
+			if matchIndex := strings.Index(defLower, queryLower); matchIndex != -1 {
+				*results = append(*results, SearchResult{
+					ID:           "proc-def-" + procPath,
+					Name:         proc.Name,
+					Path:         procPath,
+					Type:         "procedure",
+					ConnectionID: conn.ID,
+					Database:     database,
+					Schema:       proc.Schema,
+					ObjectName:   proc.Name,
+					MatchedText:  extractContext(*proc.Definition, matchIndex, len(query)),
+					MatchReason:  "Definition match",
+					LineNumber:   strings.Count((*proc.Definition)[:matchIndex], "\n") + 1,
+				})
+				continue
+			}
+		}
+
+		// Parameter match
+		for _, param := range proc.Parameters {
+			if fuzzyMatch(param.Name, query) {
+				*results = append(*results, SearchResult{
+					ID:           "proc-param-" + procPath + "-" + param.Name,
+					Name:         proc.Name,
+					Path:         procPath,
+					Type:         "procedure",
+					ConnectionID: conn.ID,
+					Database:     database,
+					Schema:       proc.Schema,
+					ObjectName:   proc.Name,
+					MatchedText:  param.Name,
+					MatchReason:  "Parameter match",
+				})
+				break
+			}
+		}
+
+		// Result set column match
+		foundInResultSet := false
+		for rsIdx, rs := range proc.ResultSets {
+			for _, col := range rs.Columns {
+				if fuzzyMatch(col.Name, query) {
+					*results = append(*results, SearchResult{
+						ID:           "proc-rs-col-" + procPath + "-" + col.Name,
+						Name:         proc.Name,
+						Path:         procPath,
+						Type:         "procedure",
+						ConnectionID: conn.ID,
+						Database:     database,
+						Schema:       proc.Schema,
+						ObjectName:   proc.Name,
+						MatchedText:  col.Name,
+						MatchReason:  "Result set column match (Set " + string(rune(rsIdx+'1')) + ")",
+					})
+					foundInResultSet = true
+					break
+				}
+			}
+			if foundInResultSet {
+				break
+			}
 		}
 	}
 }
 
-func searchInProcedures(conn cache.Connection, database string, schema *cache.SchemaResponse, query string, results *[]ProcedureSearchResult) {
-	for _, proc := range schema.StoredProcedures {
-		if proc.Definition != nil && strings.Contains(strings.ToLower(*proc.Definition), strings.ToLower(query)) {
-			// Find context around match
-			defLower := strings.ToLower(*proc.Definition)
-			queryLower := strings.ToLower(query)
-			matchIndex := strings.Index(defLower, queryLower)
-			contextStart := max(0, matchIndex-50)
-			contextEnd := min(len(*proc.Definition), matchIndex+len(queryLower)+50)
-			matchedText := (*proc.Definition)[contextStart:contextEnd]
-
-			*results = append(*results, ProcedureSearchResult{
-				ConnectionID:   conn.ID,
-				ConnectionName: conn.Name,
-				Database:       database,
-				Type:           "procedure",
-				Name:           proc.Schema + "." + proc.Name,
-				Definition:     *proc.Definition,
-				MatchedText:    matchedText,
-			})
-		}
+func extractContext(text string, matchIndex, queryLen int) string {
+	start := max(0, matchIndex-40)
+	end := min(len(text), matchIndex+queryLen+40)
+	context := text[start:end]
+	if start > 0 {
+		context = "..." + context
 	}
+	if end < len(text) {
+		context = context + "..."
+	}
+	return context
 }
 
 func fuzzyMatch(target, query string) bool {

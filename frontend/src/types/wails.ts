@@ -1,5 +1,4 @@
-import type { cache, search } from "wailsjs/go/models"
+import type { cache, search } from "wailsjs/go/models";
 
-export type Connection = cache.Connection
-export type ProcedureSearchResult = search.ProcedureSearchResult
-export type SearchResult = search.SearchResult
+export type Connection = cache.Connection;
+export type SearchResult = search.SearchResult;

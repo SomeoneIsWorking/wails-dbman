@@ -6,13 +6,6 @@ type DatabasesResponse struct {
 	UpdatedAt string   `json:"updatedAt"`
 }
 
-type ProcedureState struct {
-	State       string  `json:"state"` // "waiting", "loading", "loaded", "failed"
-	Error       *string `json:"error,omitempty"`
-	LastAttempt *int64  `json:"lastAttempt,omitempty"`
-	LastUpdated int64   `json:"lastUpdated"`
-}
-
 type TableResponse struct {
 	Name        string               `json:"name"`
 	Schema      string               `json:"schema"`
@@ -80,19 +73,10 @@ type ResultSetColumnResponse struct {
 }
 
 type SchemaResponse struct {
-	Tables           []TableResponse           `json:"tables"`
-	Views            []ViewResponse            `json:"views"`
-	StoredProcedures []ProcedureResponse       `json:"storedProcedures"`
-	LoadingStates    map[string]ProcedureState `json:"loadingStates"`
-	UpdatedAt        string                    `json:"updatedAt"`
-}
-
-type LoadingStatesResponse struct {
-	States map[string]ProcedureState `json:"states"`
-}
-
-type BackgroundLoaderStatusResponse struct {
-	Active bool `json:"active"`
+	Tables           []TableResponse     `json:"tables"`
+	Views            []ViewResponse      `json:"views"`
+	StoredProcedures []ProcedureResponse `json:"storedProcedures"`
+	UpdatedAt        string              `json:"updatedAt"`
 }
 
 type TableDataResponse struct {

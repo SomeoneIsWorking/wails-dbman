@@ -6,6 +6,7 @@
       readonly
       :connection-id="connectionId"
       :database="database"
+      :reveal-line="revealLine"
     >
       <template #actions>
         <button
@@ -21,9 +22,9 @@
 </template>
 
 <script setup lang="ts">
-import SqlEditor from '../SqlEditor.vue'
-import StateWrapper from '../StateWrapper.vue'
-import { RefreshCw } from 'lucide-vue-next'
+import SqlEditor from "../SqlEditor.vue";
+import StateWrapper from "../StateWrapper.vue";
+import { RefreshCw } from "lucide-vue-next";
 
 interface Props {
   definition: string;
@@ -32,6 +33,7 @@ interface Props {
   connectionId: string;
   database: string;
   onRefresh: () => void;
+  revealLine?: number;
 }
 
 defineProps<Props>();

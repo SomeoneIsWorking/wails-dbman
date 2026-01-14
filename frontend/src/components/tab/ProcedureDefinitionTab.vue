@@ -5,6 +5,7 @@
     :readonly="!isModifying"
     :connection-id="connectionId"
     :database="database"
+    :reveal-line="revealLine"
   />
 </template>
 
@@ -16,6 +17,7 @@ interface Props {
   isModifying: boolean;
   connectionId: string;
   database: string;
+  revealLine?: number;
 }
 
 defineProps<Props>();

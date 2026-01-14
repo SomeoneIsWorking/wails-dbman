@@ -1,8 +1,5 @@
 export namespace cache {
 	
-	export interface BackgroundLoaderStatusResponse {
-	    active: boolean;
-	}
 	export interface QueryHistory {
 	    id: string;
 	    connectionId: string;
@@ -194,15 +191,6 @@ export namespace cache {
 	    referencedTable: string;
 	    referencedColumns: string[];
 	}
-	export interface ProcedureState {
-	    state: string;
-	    error?: string;
-	    lastAttempt?: number;
-	    lastUpdated: number;
-	}
-	export interface LoadingStatesResponse {
-	    states: Record<string, ProcedureState>;
-	}
 	export interface ParameterInfo {
 	    name: string;
 	    type: string;
@@ -247,7 +235,6 @@ export namespace cache {
 	
 	
 	
-	
 	export interface ResultSetColumnInfo {
 	    name: string;
 	    type: string;
@@ -278,7 +265,6 @@ export namespace cache {
 	    tables: TableResponse[];
 	    views: ViewResponse[];
 	    storedProcedures: ProcedureResponse[];
-	    loadingStates: Record<string, ProcedureState>;
 	    updatedAt: string;
 	}
 	export interface StoredProcedureInfo {
@@ -321,15 +307,6 @@ export namespace main {
 
 export namespace search {
 	
-	export interface ProcedureSearchResult {
-	    connectionId: string;
-	    connectionName: string;
-	    database: string;
-	    type: string;
-	    name: string;
-	    definition: string;
-	    matchedText?: string;
-	}
 	export interface SearchResult {
 	    id: string;
 	    name: string;
@@ -339,6 +316,9 @@ export namespace search {
 	    database: string;
 	    schema?: string;
 	    objectName?: string;
+	    matchedText?: string;
+	    matchReason?: string;
+	    lineNumber?: number;
 	}
 
 }

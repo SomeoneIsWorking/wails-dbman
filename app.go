@@ -4,9 +4,7 @@ import (
 	"context"
 	"log"
 	"wails-dbman/pkg/adapters"
-	"wails-dbman/pkg/background"
 	"wails-dbman/pkg/cache"
-	"wails-dbman/pkg/loading"
 	"wails-dbman/pkg/search"
 )
 
@@ -122,9 +120,6 @@ func (a *App) GetSchema(connectionId, database string, invalidate bool) (*cache.
 			return nil, err
 		}
 		if cached != nil {
-			// Get loading states
-			states := loading.GetAllLoadingStates(connectionId, database)
-			cached.LoadingStates = states
 			return cached, nil
 		}
 	}
@@ -143,13 +138,10 @@ func (a *App) GetSchema(connectionId, database string, invalidate bool) (*cache.
 	if err != nil {
 		// Log but don't fail
 	}
-	// Get loading states
-	states := loading.GetAllLoadingStates(connectionId, database)
 	result := &cache.SchemaResponse{
 		Tables:           make([]cache.TableResponse, len(schema.Tables)),
 		Views:            make([]cache.ViewResponse, len(schema.Views)),
 		StoredProcedures: make([]cache.ProcedureResponse, len(schema.StoredProcedures)),
-		LoadingStates:    states,
 	}
 	for i, table := range schema.Tables {
 		columns := make([]cache.ColumnResponse, len(table.Columns))
@@ -198,24 +190,15 @@ func (a *App) GetSchema(connectionId, database string, invalidate bool) (*cache.
 	return result, nil
 }
 
-func (a *App) GetLoadingStates(connectionId, database string) (*cache.LoadingStatesResponse, error) {
-	states := loading.GetAllLoadingStates(connectionId, database)
-	return &cache.LoadingStatesResponse{
-		States: states,
-	}, nil
-}
-
 func (a *App) Search(query, connectionId, database string) ([]search.SearchResult, error) {
-	// Ensure schema is cached
-	_, err := a.GetSchema(connectionId, database, false)
-	if err != nil {
-		return nil, err
+	// Only ensure specific schema is cached if context is provided
+	if connectionId != "" && database != "" {
+		_, err := a.GetSchema(connectionId, database, false)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return search.Search(query, connectionId, database)
-}
-
-func (a *App) ProcedureSearch(query string) ([]search.ProcedureSearchResult, error) {
-	return search.ProcedureSearch(query)
 }
 
 func (a *App) AnalyzeProcedure(connectionId, database, schema, name string) (*cache.StoredProcedureInfo, error) {
@@ -235,47 +218,6 @@ func (a *App) AnalyzeProcedure(connectionId, database, schema, name string) (*ca
 	}
 	log.Printf("AnalyzeProcedure completed successfully")
 	return result, nil
-}
-
-func (a *App) GetBackgroundLoaderStatus(connectionId, database string) (*cache.BackgroundLoaderStatusResponse, error) {
-	active := background.IsBackgroundLoadingActive(connectionId, database)
-	return &cache.BackgroundLoaderStatusResponse{
-		Active: active,
-	}, nil
-}
-
-func (a *App) StartBackgroundLoader(connectionId, database string) error {
-	cachedSchema, err := cache.GetCachedSchema(connectionId, database)
-	if err != nil || cachedSchema == nil {
-		return err
-	}
-	adapter, err := a.createAdapter(connectionId)
-	if err != nil {
-		return err
-	}
-	// Convert cached schema back to SchemaInfo
-	schema := cache.SchemaInfo{}
-	for _, table := range cachedSchema.Tables {
-		schema.Tables = append(schema.Tables, cache.TableInfo{
-			Name:   table.Name,
-			Schema: table.Schema,
-		})
-	}
-	for _, proc := range cachedSchema.StoredProcedures {
-		schema.StoredProcedures = append(schema.StoredProcedures, cache.StoredProcedureInfo{
-			Name:   proc.Name,
-			Schema: proc.Schema,
-		})
-	}
-	return background.StartBackgroundLoading(a.ctx, connectionId, database, adapter, schema)
-}
-
-func (a *App) StopBackgroundLoader(connectionId, database string) error {
-	stopped := background.StopBackgroundLoading(connectionId, database)
-	if !stopped {
-		return nil // Not an error if not running
-	}
-	return nil
 }
 
 type GetTableDataRequest struct {

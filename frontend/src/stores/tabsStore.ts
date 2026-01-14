@@ -60,6 +60,7 @@ export type ViewTabState = {
   pageSize: number;
   totalRows: number;
   activeTab: "data" | "definition" | "schema";
+  targetLine?: number;
 };
 
 export type ProcedureTabState = {
@@ -68,6 +69,7 @@ export type ProcedureTabState = {
   info: cache.StoredProcedureInfo | null;
   content: string;
   activeTab: "info" | "definition" | "query";
+  targetLine?: number;
 };
 
 export type MessageEntry = {
@@ -134,9 +136,20 @@ export const useTabsStore = defineStore("tabs", () => {
     connectionId: string,
     database: string,
     schema: string,
-    viewName: string
+    viewName: string,
+    targetLine?: number
   ) => {
     const tabId = `view-${connectionId}-${database}-${schema}.${viewName}`;
+    const existingTab = tabs.value.find((t) => t.id === tabId) as ViewTab;
+    if (existingTab) {
+      if (targetLine) {
+        existingTab.state.targetLine = targetLine;
+        existingTab.state.activeTab = "definition";
+      }
+      activeTab.value = existingTab;
+      return;
+    }
+
     const tab: ViewTab = {
       id: tabId,
       type: "view",
@@ -153,7 +166,8 @@ export const useTabsStore = defineStore("tabs", () => {
         page: 0,
         pageSize: 100,
         totalRows: 0,
-        activeTab: "data",
+        activeTab: targetLine ? "definition" : "data",
+        targetLine,
       },
     };
     addTab(tab, loadViewData);
@@ -163,9 +177,20 @@ export const useTabsStore = defineStore("tabs", () => {
     connectionId: string,
     database: string,
     schema: string,
-    procedureName: string
+    procedureName: string,
+    targetLine?: number
   ) => {
     const tabId = `procedure-${connectionId}-${database}-${schema}.${procedureName}`;
+    const existingTab = tabs.value.find((t) => t.id === tabId) as ProcedureTab;
+    if (existingTab) {
+      if (targetLine) {
+        existingTab.state.targetLine = targetLine;
+        existingTab.state.activeTab = "definition";
+      }
+      activeTab.value = existingTab;
+      return;
+    }
+
     const tab: ProcedureTab = {
       id: tabId,
       type: "procedure",
@@ -178,7 +203,8 @@ export const useTabsStore = defineStore("tabs", () => {
         error: null,
         info: null,
         content: "",
-        activeTab: "info",
+        activeTab: targetLine ? "definition" : "info",
+        targetLine,
       },
     };
     addTab(tab, loadProcedureData);

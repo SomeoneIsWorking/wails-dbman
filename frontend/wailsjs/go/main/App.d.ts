@@ -10,15 +10,11 @@ export function CreateConnection(arg1:cache.Connection):Promise<cache.Connection
 
 export function DeleteConnection(arg1:string):Promise<void>;
 
-export function GetBackgroundLoaderStatus(arg1:string,arg2:string):Promise<cache.BackgroundLoaderStatusResponse>;
-
 export function GetConnection(arg1:string):Promise<cache.Connection>;
 
 export function GetConnections():Promise<Array<cache.Connection>>;
 
 export function GetDatabases(arg1:string,arg2:boolean):Promise<Array<string>>;
-
-export function GetLoadingStates(arg1:string,arg2:string):Promise<cache.LoadingStatesResponse>;
 
 export function GetSchema(arg1:string,arg2:string,arg3:boolean):Promise<cache.SchemaResponse>;
 
@@ -28,13 +24,7 @@ export function GetTableDataCount(arg1:main.GetTableDataCountRequest):Promise<nu
 
 export function GetViewData(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:number):Promise<cache.TableDataResponse>;
 
-export function ProcedureSearch(arg1:string):Promise<Array<search.ProcedureSearchResult>>;
-
 export function Search(arg1:string,arg2:string,arg3:string):Promise<Array<search.SearchResult>>;
-
-export function StartBackgroundLoader(arg1:string,arg2:string):Promise<void>;
-
-export function StopBackgroundLoader(arg1:string,arg2:string):Promise<void>;
 
 export function TestConnection(arg1:cache.Connection):Promise<void>;
 

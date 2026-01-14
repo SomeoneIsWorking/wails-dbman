@@ -61,18 +61,10 @@ export interface StoredProcedureDetails {
   resultSets: StoredProcedureResultSet[];
 }
 
-export interface ProcedureState {
-  state: 'waiting' | 'loading' | 'loaded' | 'failed';
-  error?: string;
-  lastAttempt?: number;
-  lastUpdated: number;
-}
-
 export interface SchemaInfo {
   tables: TableInfo[];
   views: ViewInfo[];
   storedProcedures: StoredProcedureInfo[];
-  loadingStates?: Record<string, ProcedureState>;
 }
 
 export interface DatabaseInfo {
@@ -98,9 +90,13 @@ export interface ViewIdentifier {
 
 export interface TableInfoAccessor {
   // Bulk operations only
-  getMultipleTableColumns(tableNames: TableIdentifier[]): Promise<Map<string, ColumnInfo[]>>;
-  getMultipleViewColumns(viewNames: ViewIdentifier[]): Promise<Map<string, ColumnInfo[]>>;
+  getMultipleTableColumns(
+    tableNames: TableIdentifier[]
+  ): Promise<Map<string, ColumnInfo[]>>;
+  getMultipleViewColumns(
+    viewNames: ViewIdentifier[]
+  ): Promise<Map<string, ColumnInfo[]>>;
   getProcedureDefinition(schema: string, name: string): Promise<string>;
-  
+
   disconnect(): Promise<void>;
 }

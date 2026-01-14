@@ -2,9 +2,9 @@
   <div class="h-screen bg-background text-foreground flex">
     <!-- Main Layout -->
     <!-- Left Sidebar - Database Explorer -->
-    <Resizable horizontal v-model:width="sidebarWidth" :min="250" :max="600">
+    <Resizable horizontal v-model:width="sidebarWidth" :min="270" :max="600">
       <aside class="border-r border-border flex flex-col min-w-0 min-h-0">
-        <DatabaseExplorer />
+        <DatabaseExplorer @new-connection="openNewConnection" />
       </aside>
     </Resizable>
     <div class="flex flex-1 flex-col min-w-0">
@@ -29,14 +29,6 @@
             <Search class="w-4 h-4" />
             Search
           </button>
-          <button class="btn-success" @click="procedureTextSearch.open()">
-            <FileCode class="w-4 h-4" />
-            Procs
-          </button>
-          <button class="btn-accent" @click="openNewConnection">
-            <PlusCircle class="w-4 h-4" />
-            Connect
-          </button>
           <div class="h-4 w-px bg-border mx-1"></div>
           <button
             class="p-1 hover:bg-surface-hover rounded"
@@ -57,7 +49,6 @@
 
     <!-- Modals -->
     <CommandPalette ref="commandPalette" />
-    <ProcedureTextSearchModal ref="procedureTextSearch" />
 
     <ConnectionDialog
       :is-open="showNewConnectionDialog"
@@ -72,9 +63,8 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { Search, Plus, Sun, Moon, FileCode, PlusCircle } from "lucide-vue-next";
+import { Search, Plus, Sun, Moon } from "lucide-vue-next";
 import CommandPalette from "./components/CommandPalette.vue";
-import ProcedureTextSearchModal from "./components/ProcedureTextSearchModal.vue";
 import DatabaseExplorer from "./components/DatabaseExplorer.vue";
 import Resizable from "./components/Resizable.vue";
 import TabBar from "./components/TabBar.vue";
@@ -87,7 +77,6 @@ import { useConnectionForm } from "./composables/useConnectionForm";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
 
 const commandPalette = ref();
-const procedureTextSearch = ref();
 
 // Use the UI composables
 const tabsStore = useTabsStore();
@@ -118,6 +107,5 @@ const handleConnectionSaved = async () => {
 // Expose methods globally
 defineExpose({
   openCommandPalette: () => commandPalette.value?.open(),
-  openProcedureTextSearch: () => procedureTextSearch.value?.open(),
 });
 </script>
