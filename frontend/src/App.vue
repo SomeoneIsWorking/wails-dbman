@@ -15,19 +15,18 @@
     <div class="flex flex-1 flex-col min-w-0">
       <!-- Top Toolbar -->
       <header class="toolbar shadow-sm z-50 h-10 justify-stretch">
-        <ScrollView
-          class="flex-1 items-center h-full"
-          container-class="flex gap-1 px-2 min-w-max"
-        >
-          <TabBar />
-          <button
-            class="p-1 hover:bg-surface-hover rounded"
-            title="New Query"
-            @click="createNewQuery"
-          >
-            <Plus class="w-4 h-4" />
-          </button>
-        </ScrollView>
+        <OverlayScrollbarsComponent class="flex-1 items-center h-full">
+          <div class="flex">
+            <TabBar />
+            <button
+              class="p-1 hover:bg-surface-hover rounded"
+              title="New Query"
+              @click="createNewQuery"
+            >
+              <Plus class="w-4 h-4" />
+            </button>
+          </div>
+        </OverlayScrollbarsComponent>
         <div class="flex items-center gap-2 px-2">
           <button class="btn-secondary" @click="commandPalette.open()">
             <Search class="w-4 h-4" />
@@ -75,7 +74,7 @@ import TabBar from "./components/TabBar.vue";
 import TabContent from "./components/TabContent.vue";
 import { useTabsStore } from "./stores/tabsStore";
 import { useThemeStore } from "./stores/themeStore";
-import ScrollView from "./components/ScrollView.vue";
+import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
 
 const commandPalette = ref();
 const procedureTextSearch = ref();
