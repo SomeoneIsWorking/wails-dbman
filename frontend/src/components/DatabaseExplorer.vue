@@ -8,21 +8,24 @@
     </h2>
     <div class="flex-1"></div>
     <button
+      class="p-1 hover:bg-surface rounded"
+      @click="emit('new-connection')"
+    >
+      <Plus class="w-4 h-4" />
+    </button>
+    <button
       @click="loadConnections"
-      class="p-1 hover:bg-surface-hover rounded"
+      class="p-1 hover:bg-surface rounded"
       title="Refresh"
     >
       <RefreshCw class="w-4 h-4" />
     </button>
     <button
       @click="groupBySchema = !groupBySchema"
-      class="p-1 hover:bg-surface-hover rounded"
+      class="p-1 hover:bg-surface rounded"
       title="Toggle Group by Schema"
     >
-      <component
-        :is="groupBySchema ? Group : List"
-        class="w-4 h-4"
-      />
+      <component :is="groupBySchema ? Group : List" class="w-4 h-4" />
     </button>
   </div>
   <OverlayScrollbarsComponent
@@ -255,6 +258,7 @@ import {
   List,
   Edit,
   Server,
+  Plus,
 } from "lucide-vue-next";
 import { useTabsStore } from "@/stores/tabsStore";
 import { useConnectionsStore } from "@/stores/connectionsStore";
@@ -278,6 +282,8 @@ const editFormState = useConnectionForm();
 onMounted(async () => {
   await connectionsStore.loadConnections();
 });
+
+const emit = defineEmits(["new-connection"]);
 
 const loadConnections = () => {
   connectionsStore.loadConnections();

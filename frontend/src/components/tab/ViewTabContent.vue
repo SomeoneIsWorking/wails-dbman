@@ -12,9 +12,9 @@
   >
     <template #actions v-if="viewState.activeTab === 'data'">
       <div class="flex items-center gap-2">
-        <label class="text-xs text-foreground-secondary whitespace-nowrap"
-          >Rows:</label
-        >
+        <label class="text-xs text-foreground-secondary whitespace-nowrap">
+          Rows:
+        </label>
         <select
           v-model="viewState.pageSize"
           @change="changePageSize"
@@ -77,6 +77,7 @@
       :connection-id="tab.connectionId"
       :database="tab.database"
       :on-refresh="refreshData"
+      :reveal-line="viewState.targetLine"
     />
 
     <ViewSchemaTab

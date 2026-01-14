@@ -45,6 +45,7 @@
         :is-modifying="isModifying"
         :connection-id="tab.connectionId"
         :database="tab.database"
+        :reveal-line="procedureState.targetLine"
       />
       <ProcedureQueryTab
         v-else-if="procedureState.activeTab === 'query'"

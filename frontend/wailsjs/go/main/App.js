@@ -14,10 +14,6 @@ export function DeleteConnection(arg1) {
   return window['go']['main']['App']['DeleteConnection'](arg1);
 }
 
-export function GetBackgroundLoaderStatus(arg1, arg2) {
-  return window['go']['main']['App']['GetBackgroundLoaderStatus'](arg1, arg2);
-}
-
 export function GetConnection(arg1) {
   return window['go']['main']['App']['GetConnection'](arg1);
 }
@@ -28,10 +24,6 @@ export function GetConnections() {
 
 export function GetDatabases(arg1, arg2) {
   return window['go']['main']['App']['GetDatabases'](arg1, arg2);
-}
-
-export function GetLoadingStates(arg1, arg2) {
-  return window['go']['main']['App']['GetLoadingStates'](arg1, arg2);
 }
 
 export function GetSchema(arg1, arg2, arg3) {
@@ -50,20 +42,8 @@ export function GetViewData(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['main']['App']['GetViewData'](arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
-export function ProcedureSearch(arg1) {
-  return window['go']['main']['App']['ProcedureSearch'](arg1);
-}
-
 export function Search(arg1, arg2, arg3) {
   return window['go']['main']['App']['Search'](arg1, arg2, arg3);
-}
-
-export function StartBackgroundLoader(arg1, arg2) {
-  return window['go']['main']['App']['StartBackgroundLoader'](arg1, arg2);
-}
-
-export function StopBackgroundLoader(arg1, arg2) {
-  return window['go']['main']['App']['StopBackgroundLoader'](arg1, arg2);
 }
 
 export function TestConnection(arg1) {

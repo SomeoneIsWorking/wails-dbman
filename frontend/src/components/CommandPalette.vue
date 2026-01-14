@@ -25,12 +25,6 @@
             ref="searchInput"
           />
         </div>
-        <div class="flex items-center gap-2">
-          <span
-            class="text-sm font-bold uppercase tracking-widest text-foreground-secondary/50 px-1.5 py-0.5 border border-border rounded"
-            >⌘K</span
-          >
-        </div>
       </div>
 
       <OverlayScrollbarsComponent
@@ -69,13 +63,13 @@
           <button
             v-for="(result, index) in results"
             :key="result.id"
-            class="w-full text-left px-4 py-2.5 hover:bg-primary/5 group/result transition-colors flex items-center gap-3"
+            class="w-full text-left px-4 py-3 hover:bg-primary/5 group/result transition-colors flex items-start gap-3"
             :class="{ 'bg-primary/5': index === selectedIndex }"
             @click="selectResult"
             @mouseenter="selectedIndex = index"
           >
             <div
-              class="w-7 h-7 rounded flex items-center justify-center border border-border/50"
+              class="w-7 h-7 mt-0.5 rounded flex items-center justify-center border border-border/50"
               :class="getIconClass(result.type)"
             >
               <component :is="getIcon(result.type)" class="w-3.5 h-3.5" />
@@ -83,21 +77,26 @@
 
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between mb-0.5">
-                <div
-                  class="font-bold text-xs text-foreground truncate uppercase tracking-tight"
-                >
-                  {{ result.name }}
+                <div class="font-bold text-xs text-foreground tracking-tight">
+                  {{ result.path }}
                 </div>
                 <div
-                  class="text-sm font-bold text-foreground-secondary uppercase tracking-widest opacity-60"
+                  class="text-[10px] font-bold text-foreground-secondary uppercase tracking-widest opacity-60"
                 >
                   {{ result.type }}
                 </div>
               </div>
-              <div
-                class="text-sm text-foreground-secondary truncate opacity-70 font-medium"
-              >
-                {{ result.path }}
+              <div v-if="result.matchedText" class="mt-1.5">
+                <div
+                  class="text-[9px] font-bold text-primary uppercase tracking-tighter mb-0.5"
+                >
+                  {{ result.matchReason }}
+                </div>
+                <div
+                  class="text-xs font-mono bg-surface-hover/50 p-1.5 rounded border border-border/30 text-foreground-secondary truncate"
+                >
+                  {{ result.matchedText }}
+                </div>
               </div>
             </div>
           </button>
@@ -138,9 +137,11 @@ import {
   Eye,
 } from "lucide-vue-next";
 import { Search as SearchAPI } from "wailsjs/go/main/App";
-import { SearchResult } from "@/types/wails";
+import type { SearchResult } from "@/types/wails";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
+import { useTabsStore } from "@/stores/tabsStore";
 
+const tabsStore = useTabsStore();
 const isOpen = ref(false);
 const search = ref("");
 const selectedIndex = ref(0);
@@ -179,14 +180,17 @@ const performSearch = async (query: string) => {
     results.value = [];
     return;
   }
-  // For now, search without specific connection/database context
-  // TODO: Get current active connection/database from global state
-  const connectionId = "default";
-  const database = "master";
+
+  const connectionId = tabsStore.activeTab?.connectionId || "";
+  const database = tabsStore.activeTab?.database || "";
 
   isLoading.value = true;
   try {
-    results.value = await SearchAPI(query, connectionId, database);
+    results.value = (await SearchAPI(
+      query,
+      connectionId,
+      database
+    )) as SearchResult[];
   } catch (e) {
     results.value = [];
   } finally {
@@ -202,6 +206,11 @@ watch(search, (newValue) => {
 // Keyboard shortcut to open command palette
 const handleKeydown = (e: KeyboardEvent) => {
   if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+    e.preventDefault();
+    open();
+  }
+  // Also handle Cmd+F to open search (since we're replacing ProcedureSearchModal)
+  if ((e.metaKey || e.ctrlKey) && e.key === "f") {
     e.preventDefault();
     open();
   }
@@ -239,8 +248,30 @@ const navigateResults = (direction: number) => {
 const selectResult = () => {
   const result = results.value[selectedIndex.value];
   if (result) {
-    // Logic to open selected object
-    console.log("Open", result);
+    if (result.type === "table") {
+      tabsStore.addTableTab(
+        result.connectionId,
+        result.database,
+        result.schema || "dbo",
+        result.objectName || result.name
+      );
+    } else if (result.type === "view") {
+      tabsStore.addViewTab(
+        result.connectionId,
+        result.database,
+        result.schema || "dbo",
+        result.objectName || result.name,
+        result.lineNumber
+      );
+    } else if (result.type === "procedure") {
+      tabsStore.addProcedureTab(
+        result.connectionId,
+        result.database,
+        result.schema || "dbo",
+        result.objectName || result.name,
+        result.lineNumber
+      );
+    }
     close();
   }
 };
