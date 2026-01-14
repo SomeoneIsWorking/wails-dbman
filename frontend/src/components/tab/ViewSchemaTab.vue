@@ -1,56 +1,50 @@
 <template>
   <OverlayScrollbarsComponent class="h-full p-4">
     <StateWrapper :loading="loading" :error="error">
-      <div class="max-w-4xl mx-auto">
-        <OverlayScrollbarsComponent
-          class="border border-border rounded shadow-sm"
-        >
-          <table class="min-w-full divide-y divide-border">
-            <thead class="bg-surface-hover">
+      <div class="schema-section">
+        <h4 class="schema-header">
+          <Database class="w-5 h-5 text-blue-600" />
+          Columns ({{ columns.length }})
+        </h4>
+        <div class="schema-table-container">
+          <table class="schema-table">
+            <thead>
               <tr>
-                <th class="px-3 py-1.5 uppercase border-b">Name</th>
-                <th class="px-3 py-1.5 uppercase border-b">Type</th>
-                <th class="px-3 py-1.5 uppercase border-b">Nullable</th>
-                <th class="px-3 py-1.5 uppercase border-b">Default</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Nullable</th>
+                <th>Default</th>
               </tr>
             </thead>
-            <tbody class="bg-surface divide-y divide-border">
-              <tr
-                v-for="column in columns"
-                :key="column.name"
-                class="hover:bg-surface-hover transition-colors"
-              >
-                <td class="px-3 py-1.5 font-medium text-foreground">
+            <tbody class="bg-surface divide-y divide-border/50">
+              <tr v-for="column in columns" :key="column.name">
+                <td class="font-medium text-foreground">
                   {{ column.name }}
                 </td>
-                <td class="px-3 py-1.5 text-foreground-secondary font-mono">
+                <td class="text-foreground-secondary font-mono">
                   {{ column.type }}
                 </td>
-                <td class="px-3 py-1.5">
+                <td>
                   <span
-                    :class="
-                      column.nullable
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400'
-                    "
-                    class="font-medium"
+                    :class="column.nullable ? 'badge-success' : 'badge-error'"
                   >
                     {{ column.nullable ? "Yes" : "No" }}
                   </span>
                 </td>
-                <td class="px-3 py-1.5 text-foreground-secondary font-mono">
+                <td class="text-foreground-secondary font-mono">
                   {{ column.defaultValue || "-" }}
                 </td>
               </tr>
             </tbody>
           </table>
-        </OverlayScrollbarsComponent>
+        </div>
       </div>
     </StateWrapper>
   </OverlayScrollbarsComponent>
 </template>
 
 <script setup lang="ts">
+import { Database } from "lucide-vue-next";
 import StateWrapper from "../StateWrapper.vue";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
 
