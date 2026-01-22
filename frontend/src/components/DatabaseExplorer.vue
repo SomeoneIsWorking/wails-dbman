@@ -56,14 +56,21 @@
         :key="`${conn.id}-${db.name}`"
         class="ml-1 mt-1"
         :expanded="expanded[`db-${conn.id}-${db.name}`]"
-        @toggle="
-          expanded[`db-${conn.id}-${db.name}`] =
-            !expanded[`db-${conn.id}-${db.name}`]
-        "
+        @toggle="toggleDatabase(conn.id, db)"
       >
         <template #header>
-          <Database class="w-3 h-3 mr-1" />
-          <span class="font-medium">{{ db.name }}</span>
+          <Loader2 v-if="db.loading" class="w-3 h-3 mr-1 animate-spin" />
+          <Database v-else class="w-3 h-3 mr-1" />
+          <span class="font-medium flex-1 text-xs truncate">{{ db.name }}</span>
+          <button
+            @click.stop="
+              connectionsStore.loadSchemaForDatabase(conn.id, db, true)
+            "
+            class="p-1 hover:bg-surface-hover rounded ml-auto flex-shrink-0"
+            title="Refresh Schema"
+          >
+            <RefreshCw class="w-2 h-2" />
+          </button>
         </template>
         <!-- Schema objects under database -->
         <!-- Tables -->
@@ -259,6 +266,7 @@ import {
   Edit,
   Server,
   Plus,
+  Loader2,
 } from "lucide-vue-next";
 import { useTabsStore } from "@/stores/tabsStore";
 import { useConnectionsStore } from "@/stores/connectionsStore";
@@ -294,7 +302,7 @@ const tabsStore = useTabsStore();
 const openTable = (
   connectionId: string,
   databaseName: string,
-  table: { schema: string; name: string }
+  table: { schema: string; name: string },
 ) => {
   tabsStore.addTableTab(connectionId, databaseName, table.schema, table.name);
 };
@@ -302,7 +310,7 @@ const openTable = (
 const openView = (
   connectionId: string,
   databaseName: string,
-  view: { schema: string; name: string }
+  view: { schema: string; name: string },
 ) => {
   tabsStore.addViewTab(connectionId, databaseName, view.schema, view.name);
 };
@@ -310,14 +318,22 @@ const openView = (
 const openProcedure = (
   connectionId: string,
   databaseName: string,
-  procedure: { schema: string; name: string }
+  procedure: { schema: string; name: string },
 ) => {
   tabsStore.addProcedureTab(
     connectionId,
     databaseName,
     procedure.schema,
-    procedure.name
+    procedure.name,
   );
+};
+
+const toggleDatabase = async (connectionId: string, db: any) => {
+  const key = `db-${connectionId}-${db.name}`;
+  expanded.value[key] = !expanded.value[key];
+  if (expanded.value[key] && !db.loaded) {
+    await connectionsStore.loadSchemaForDatabase(connectionId, db);
+  }
 };
 
 const handleSaveConnection = async () => {

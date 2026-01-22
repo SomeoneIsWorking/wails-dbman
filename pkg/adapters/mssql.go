@@ -13,23 +13,22 @@ import (
 
 type MSSQLAdapter struct {
 	config ConnectionConfig
-	db     *gorm.DB
 }
 
-func (a *MSSQLAdapter) connect() (*gorm.DB, error) {
-	if a.db != nil {
-		return a.db, nil
+func (a *MSSQLAdapter) connect(database string) (*gorm.DB, error) {
+	if database == "" && a.config.Database != nil {
+		database = *a.config.Database
 	}
-	dsn := a.buildDSN()
+
+	dsn := a.buildDSN(database)
 	db, err := gorm.Open(sqlserver.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
-	a.db = db
 	return db, nil
 }
 
-func (a *MSSQLAdapter) buildDSN() string {
+func (a *MSSQLAdapter) buildDSN(database string) string {
 	host := "localhost"
 	if a.config.Host != nil {
 		host = *a.config.Host
@@ -46,15 +45,11 @@ func (a *MSSQLAdapter) buildDSN() string {
 	if a.config.Password != nil {
 		password = *a.config.Password
 	}
-	dbname := ""
-	if a.config.Database != nil {
-		dbname = *a.config.Database
-	}
-	return fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=%s", user, password, host, port, dbname)
+	return fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=%s", user, password, host, port, database)
 }
 
 func (a *MSSQLAdapter) ListDatabases() ([]string, error) {
-	db, err := a.connect()
+	db, err := a.connect("")
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +59,7 @@ func (a *MSSQLAdapter) ListDatabases() ([]string, error) {
 }
 
 func (a *MSSQLAdapter) GetSchema(database string) (*cache.SchemaInfo, error) {
-	db, err := a.connect()
+	db, err := a.connect(database)
 	if err != nil {
 		return nil, err
 	}
@@ -352,7 +347,7 @@ func (a *MSSQLAdapter) GetSchema(database string) (*cache.SchemaInfo, error) {
 }
 
 func (a *MSSQLAdapter) ExecuteQuery(query string, database string) ([]map[string]interface{}, error) {
-	db, err := a.connect()
+	db, err := a.connect(database)
 	if err != nil {
 		return nil, err
 	}
@@ -417,7 +412,7 @@ func (a *MSSQLAdapter) GetTableData(database, schema, tableName string, options 
 	query := fmt.Sprintf("SELECT * FROM %s.%s%s ORDER BY (SELECT NULL) OFFSET %d ROWS FETCH NEXT %d ROWS ONLY", schema, tableName, whereClause, offset, limit)
 	log.Printf("Executing query: %s", query)
 
-	db, err := a.connect()
+	db, err := a.connect(database)
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +456,7 @@ func (a *MSSQLAdapter) GetTableDataCount(database, schema, tableName string, opt
 	whereClause, args := a.buildWhereClause(filters)
 	countQuery := fmt.Sprintf("SELECT COUNT(*) as total FROM %s.%s%s", schema, tableName, whereClause)
 
-	db, err := a.connect()
+	db, err := a.connect(database)
 	if err != nil {
 		return 0, err
 	}
@@ -476,7 +471,7 @@ func (a *MSSQLAdapter) GetTableDataCount(database, schema, tableName string, opt
 }
 
 func (a *MSSQLAdapter) GetProcedureDetails(database, schema, name string) (*cache.StoredProcedureInfo, error) {
-	db, err := a.connect()
+	db, err := a.connect(database)
 	if err != nil {
 		return nil, err
 	}

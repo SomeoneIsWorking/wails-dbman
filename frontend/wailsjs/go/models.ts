@@ -181,37 +181,6 @@ export namespace cache {
 	    comment?: string;
 	}
 	
-	export interface Filter {
-	    column: string;
-	    operator: string;
-	    value: any;
-	}
-	export interface ForeignKeyResponse {
-	    columns: string[];
-	    referencedTable: string;
-	    referencedColumns: string[];
-	}
-	export interface ParameterInfo {
-	    name: string;
-	    type: string;
-	    mode: string;
-	    defaultValue?: string;
-	    isNullable: boolean;
-	    maxLength?: number;
-	    precision?: number;
-	    scale?: number;
-	}
-	
-	export interface ProcedureParameterResponse {
-	    name: string;
-	    type: string;
-	    mode: string;
-	    defaultValue?: string;
-	    isNullable: boolean;
-	    maxLength?: number;
-	    precision?: number;
-	    scale?: number;
-	}
 	export interface ResultSetColumnResponse {
 	    name: string;
 	    type: string;
@@ -223,6 +192,16 @@ export namespace cache {
 	export interface ResultSetResponse {
 	    columns: ResultSetColumnResponse[];
 	}
+	export interface ProcedureParameterResponse {
+	    name: string;
+	    type: string;
+	    mode: string;
+	    defaultValue?: string;
+	    isNullable: boolean;
+	    maxLength?: number;
+	    precision?: number;
+	    scale?: number;
+	}
 	export interface ProcedureResponse {
 	    name: string;
 	    schema: string;
@@ -232,6 +211,67 @@ export namespace cache {
 	    cached: boolean;
 	    lastCached: string;
 	}
+	export interface ViewResponse {
+	    name: string;
+	    schema: string;
+	    columns: ColumnResponse[];
+	    definition?: string;
+	}
+	export interface ForeignKeyResponse {
+	    columns: string[];
+	    referencedTable: string;
+	    referencedColumns: string[];
+	}
+	export interface TableResponse {
+	    name: string;
+	    schema: string;
+	    columns: ColumnResponse[];
+	    primaryKey: string[];
+	    foreignKeys: ForeignKeyResponse[];
+	}
+	export interface SchemaResponse {
+	    tables: TableResponse[];
+	    views: ViewResponse[];
+	    storedProcedures: ProcedureResponse[];
+	    updatedAt: string;
+	}
+	export interface DatabaseDetail {
+	    name: string;
+	    schema?: SchemaResponse;
+	    loaded: boolean;
+	}
+	export interface ConnectionDetail {
+	    id: string;
+	    name: string;
+	    type: string;
+	    host?: string;
+	    port?: number;
+	    username?: string;
+	    password?: string;
+	    database?: string;
+	    connectionString?: string;
+	    databases: DatabaseDetail[];
+	}
+	
+	export interface Filter {
+	    column: string;
+	    operator: string;
+	    value: any;
+	}
+	
+	export interface ParameterInfo {
+	    name: string;
+	    type: string;
+	    mode: string;
+	    defaultValue?: string;
+	    isNullable: boolean;
+	    maxLength?: number;
+	    precision?: number;
+	    scale?: number;
+	}
+	
+	
+	
 	
 	
 	
@@ -248,25 +288,7 @@ export namespace cache {
 	    columns: ResultSetColumnInfo[];
 	}
 	
-	export interface ViewResponse {
-	    name: string;
-	    schema: string;
-	    columns: ColumnResponse[];
-	    definition?: string;
-	}
-	export interface TableResponse {
-	    name: string;
-	    schema: string;
-	    columns: ColumnResponse[];
-	    primaryKey: string[];
-	    foreignKeys: ForeignKeyResponse[];
-	}
-	export interface SchemaResponse {
-	    tables: TableResponse[];
-	    views: ViewResponse[];
-	    storedProcedures: ProcedureResponse[];
-	    updatedAt: string;
-	}
+	
 	export interface StoredProcedureInfo {
 	    name: string;
 	    schema: string;

@@ -13,23 +13,22 @@ import (
 
 type PostgresAdapter struct {
 	config ConnectionConfig
-	db     *gorm.DB
 }
 
-func (a *PostgresAdapter) connect() (*gorm.DB, error) {
-	if a.db != nil {
-		return a.db, nil
+func (a *PostgresAdapter) connect(database string) (*gorm.DB, error) {
+	if database == "" && a.config.Database != nil {
+		database = *a.config.Database
 	}
-	dsn := a.buildDSN()
+
+	dsn := a.buildDSN(database)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
-	a.db = db
 	return db, nil
 }
 
-func (a *PostgresAdapter) buildDSN() string {
+func (a *PostgresAdapter) buildDSN(database string) string {
 	host := "localhost"
 	if a.config.Host != nil {
 		host = *a.config.Host
@@ -46,15 +45,11 @@ func (a *PostgresAdapter) buildDSN() string {
 	if a.config.Password != nil {
 		password = *a.config.Password
 	}
-	dbname := ""
-	if a.config.Database != nil {
-		dbname = *a.config.Database
-	}
-	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, database)
 }
 
 func (a *PostgresAdapter) ListDatabases() ([]string, error) {
-	db, err := a.connect()
+	db, err := a.connect("")
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +65,7 @@ func (a *PostgresAdapter) GetSchema(database string) (*cache.SchemaInfo, error) 
 }
 
 func (a *PostgresAdapter) ExecuteQuery(query string, database string) ([]map[string]interface{}, error) {
-	db, err := a.connect()
+	db, err := a.connect(database)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +131,7 @@ func (a *PostgresAdapter) GetTableData(database, schema, tableName string, optio
 	offset := (page - 1) * limit
 	query := fmt.Sprintf("SELECT * FROM %s.%s%s LIMIT %d OFFSET %d", schema, tableName, whereClause, limit, offset)
 
-	db, err := a.connect()
+	db, err := a.connect(database)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +175,7 @@ func (a *PostgresAdapter) GetTableDataCount(database, schema, tableName string, 
 	whereClause, args := a.buildWhereClause(filters)
 	countQuery := fmt.Sprintf("SELECT COUNT(*) as total FROM %s.%s%s", schema, tableName, whereClause)
 
-	db, err := a.connect()
+	db, err := a.connect(database)
 	if err != nil {
 		return 0, err
 	}
@@ -195,7 +190,7 @@ func (a *PostgresAdapter) GetTableDataCount(database, schema, tableName string, 
 }
 
 func (a *PostgresAdapter) GetProcedureDetails(database, schema, name string) (*cache.StoredProcedureInfo, error) {
-	db, err := a.connect()
+	db, err := a.connect(database)
 	if err != nil {
 		return nil, err
 	}

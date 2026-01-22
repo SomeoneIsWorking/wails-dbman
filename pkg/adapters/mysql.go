@@ -12,23 +12,22 @@ import (
 
 type MySQLAdapter struct {
 	config ConnectionConfig
-	db     *gorm.DB
 }
 
-func (a *MySQLAdapter) connect() (*gorm.DB, error) {
-	if a.db != nil {
-		return a.db, nil
+func (a *MySQLAdapter) connect(database string) (*gorm.DB, error) {
+	if database == "" && a.config.Database != nil {
+		database = *a.config.Database
 	}
-	dsn := a.buildDSN()
+
+	dsn := a.buildDSN(database)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
-	a.db = db
 	return db, nil
 }
 
-func (a *MySQLAdapter) buildDSN() string {
+func (a *MySQLAdapter) buildDSN(database string) string {
 	host := "localhost"
 	if a.config.Host != nil {
 		host = *a.config.Host
@@ -45,15 +44,11 @@ func (a *MySQLAdapter) buildDSN() string {
 	if a.config.Password != nil {
 		password = *a.config.Password
 	}
-	dbname := ""
-	if a.config.Database != nil {
-		dbname = *a.config.Database
-	}
-	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, password, host, port, dbname)
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, password, host, port, database)
 }
 
 func (a *MySQLAdapter) ListDatabases() ([]string, error) {
-	db, err := a.connect()
+	db, err := a.connect("")
 	if err != nil {
 		return nil, err
 	}
@@ -63,11 +58,12 @@ func (a *MySQLAdapter) ListDatabases() ([]string, error) {
 }
 
 func (a *MySQLAdapter) GetSchema(database string) (*cache.SchemaInfo, error) {
+	// MySQL schema fetching logic would go here
 	return &cache.SchemaInfo{}, nil
 }
 
 func (a *MySQLAdapter) ExecuteQuery(query string, database string) ([]map[string]interface{}, error) {
-	db, err := a.connect()
+	db, err := a.connect(database)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +127,7 @@ func (a *MySQLAdapter) GetTableData(database, schema, tableName string, options 
 	offset := (page - 1) * limit
 	query := fmt.Sprintf("SELECT * FROM %s%s LIMIT %d OFFSET %d", tableName, whereClause, limit, offset)
 
-	db, err := a.connect()
+	db, err := a.connect(database)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +171,7 @@ func (a *MySQLAdapter) GetTableDataCount(database, schema, tableName string, opt
 	whereClause, args := a.buildWhereClause(filters)
 	countQuery := fmt.Sprintf("SELECT COUNT(*) as total FROM %s%s", tableName, whereClause)
 
-	db, err := a.connect()
+	db, err := a.connect(database)
 	if err != nil {
 		return 0, err
 	}
@@ -190,7 +186,7 @@ func (a *MySQLAdapter) GetTableDataCount(database, schema, tableName string, opt
 }
 
 func (a *MySQLAdapter) GetProcedureDetails(database, schema, name string) (*cache.StoredProcedureInfo, error) {
-	db, err := a.connect()
+	db, err := a.connect(database)
 	if err != nil {
 		return nil, err
 	}

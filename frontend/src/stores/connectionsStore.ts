@@ -2,7 +2,7 @@ import { ref } from "vue";
 import { defineStore } from "pinia";
 import { groupBy } from "lodash-es";
 import { GetConnections, GetSchema } from "wailsjs/go/main/App";
-import type { Connection } from "~/types/wails";
+import { cache } from "wailsjs/go/models";
 import type { TableInfo, ViewInfo, StoredProcedureInfo } from "../types/schema";
 
 export interface DatabaseInfo {
@@ -10,9 +10,14 @@ export interface DatabaseInfo {
   tablesBySchema: Record<string, TableInfo[]>;
   viewsBySchema: Record<string, ViewInfo[]>;
   proceduresBySchema: Record<string, StoredProcedureInfo[]>;
+  loaded: boolean;
+  loading: boolean;
 }
 
-export interface ExtendedConnection extends Connection {
+export interface ExtendedConnection extends Omit<
+  cache.ConnectionDetail,
+  "databases"
+> {
   databases: DatabaseInfo[];
 }
 
@@ -24,60 +29,74 @@ export const useConnectionsStore = defineStore("connections", () => {
   const loadConnections = async () => {
     loading.value = true;
     error.value = null;
-    
+
     try {
-      const conns = await GetConnections();
-      
+      const enrichedConns = await GetConnections();
+
       // Transform connections to include database structure
-      connections.value = await Promise.all(
-        conns.map(async (conn) => {
-          try {
-            // Get actual database schema from backend
-            const schemaResponse = await GetSchema(
-              conn.id,
-              conn.database || "master",
-              false
-            );
+      connections.value = enrichedConns.map((conn) => {
+        return {
+          ...conn,
+          databases: conn.databases.map((db) => {
+            const tablesBySchema = db.schema
+              ? groupBy(db.schema.tables, "schema")
+              : {};
+            const viewsBySchema = db.schema
+              ? groupBy(db.schema.views, "schema")
+              : {};
+            const proceduresBySchema = db.schema
+              ? groupBy(db.schema.storedProcedures, "schema")
+              : {};
 
-            const tablesBySchema = groupBy(schemaResponse.tables, "schema");
-            const viewsBySchema = groupBy(schemaResponse.views, "schema");
-            const proceduresBySchema = groupBy(
-              schemaResponse.storedProcedures,
-              "schema"
-            );
-
-            const databases = [
-              {
-                name: conn.database || "master",
-                tablesBySchema,
-                viewsBySchema,
-                proceduresBySchema,
-              },
-            ];
-
-            return { ...conn, databases };
-          } catch (error) {
-            console.error(`Failed to load schema for ${conn.name}:`, error);
-            // Return connection with empty databases on error
             return {
-              ...conn,
-              databases: [
-                {
-                  name: conn.database || "master",
-                  tablesBySchema: {},
-                  viewsBySchema: {},
-                  proceduresBySchema: {},
-                },
-              ],
+              name: db.name,
+              tablesBySchema,
+              viewsBySchema,
+              proceduresBySchema,
+              loaded: db.loaded,
+              loading: false,
             };
-          }
-        })
-      );
+          }),
+        };
+      });
     } catch (err) {
       console.error("Failed to load connections:", err);
-      error.value = err instanceof Error ? err.message : "Failed to load connections";
+      error.value =
+        err instanceof Error ? err.message : "Failed to load connections";
     } finally {
       loading.value = false;
+    }
+  };
+
+  const loadSchemaForDatabase = async (
+    connectionId: string,
+    dbInfo: DatabaseInfo,
+    invalidate: boolean = false,
+  ) => {
+    if (dbInfo.loading || (dbInfo.loaded && !invalidate)) return;
+
+    dbInfo.loading = true;
+    try {
+      const schemaResponse = await GetSchema(
+        connectionId,
+        dbInfo.name,
+        invalidate,
+      );
+
+      dbInfo.tablesBySchema = groupBy(schemaResponse.tables, "schema");
+      dbInfo.viewsBySchema = groupBy(schemaResponse.views, "schema");
+      dbInfo.proceduresBySchema = groupBy(
+        schemaResponse.storedProcedures,
+        "schema",
+      );
+      dbInfo.loaded = true;
+    } catch (error) {
+      console.error(
+        `Failed to load schema for database ${dbInfo.name}:`,
+        error,
+      );
+    } finally {
+      dbInfo.loading = false;
     }
   };
 
@@ -86,5 +105,6 @@ export const useConnectionsStore = defineStore("connections", () => {
     loading,
     error,
     loadConnections,
+    loadSchemaForDatabase,
   };
 });

@@ -119,3 +119,22 @@ type ProcedureDetailsData struct {
 	Parameters []ProcedureParameterData `json:"parameters"`
 	ResultSets []ResultSetData          `json:"resultSets"`
 }
+
+type ConnectionDetail struct {
+	ID               string           `json:"id"`
+	Name             string           `json:"name"`
+	Type             string           `json:"type"`
+	Host             *string          `json:"host,omitempty"`
+	Port             *int             `json:"port,omitempty"`
+	Username         *string          `json:"username,omitempty"`
+	Password         *string          `json:"password,omitempty"`
+	Database         *string          `json:"database,omitempty"`
+	ConnectionString *string          `json:"connectionString,omitempty"`
+	Databases        []DatabaseDetail `json:"databases"`
+}
+
+type DatabaseDetail struct {
+	Name   string          `json:"name"`
+	Schema *SchemaResponse `json:"schema,omitempty"`
+	Loaded bool            `json:"loaded"`
+}

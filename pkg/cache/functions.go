@@ -158,23 +158,28 @@ func UpdateConnection(id string, data map[string]interface{}) (Connection, error
 	if connType, ok := data["type"].(string); ok {
 		connection.Type = connType
 	}
-	if host, ok := data["host"].(*string); ok {
-		connection.Host = host
+	if host, ok := data["host"].(string); ok {
+		connection.Host = &host
 	}
-	if port, ok := data["port"].(*int); ok {
-		connection.Port = port
+	if portVal, ok := data["port"]; ok {
+		if port, ok := portVal.(float64); ok {
+			p := int(port)
+			connection.Port = &p
+		} else if port, ok := portVal.(int); ok {
+			connection.Port = &port
+		}
 	}
-	if username, ok := data["username"].(*string); ok {
-		connection.Username = username
+	if username, ok := data["username"].(string); ok {
+		connection.Username = &username
 	}
-	if password, ok := data["password"].(*string); ok {
-		connection.Password = password
+	if password, ok := data["password"].(string); ok {
+		connection.Password = &password
 	}
-	if database, ok := data["database"].(*string); ok {
-		connection.Database = database
+	if database, ok := data["database"].(string); ok {
+		connection.Database = &database
 	}
-	if connStr, ok := data["connectionString"].(*string); ok {
-		connection.ConnectionString = connStr
+	if connStr, ok := data["connectionString"].(string); ok {
+		connection.ConnectionString = &connStr
 	}
 	connection.UpdatedAt = time.Now().Format(time.RFC3339)
 	err = DB.Save(&connection).Error
