@@ -143,12 +143,13 @@ export namespace cache {
 	    id: string;
 	    name: string;
 	    type: string;
-	    host?: string;
-	    port?: number;
+	    host: string;
+	    port: number;
 	    username?: string;
 	    password?: string;
 	    database?: string;
-	    connectionString?: string;
+	    hiddenDatabases: string;
+	    showHidden: boolean;
 	    createdAt: string;
 	    updatedAt: string;
 	    Databases: CachedDatabase[];
@@ -244,13 +245,16 @@ export namespace cache {
 	    id: string;
 	    name: string;
 	    type: string;
-	    host?: string;
-	    port?: number;
+	    host: string;
+	    port: number;
 	    username?: string;
 	    password?: string;
 	    database?: string;
-	    connectionString?: string;
+	    hiddenDatabases: string;
+	    showHidden: boolean;
 	    databases: DatabaseDetail[];
+	    lastError?: string;
+	    hasError: boolean;
 	}
 	
 	export interface Filter {
@@ -323,6 +327,20 @@ export namespace main {
 	    page: number;
 	    limit: number;
 	    filters: cache.Filter[];
+	}
+
+}
+
+export namespace models {
+	
+	export interface ConnectionPostModel {
+	    name: string;
+	    type: string;
+	    host: string;
+	    port: number;
+	    username?: string;
+	    password?: string;
+	    database?: string;
 	}
 
 }

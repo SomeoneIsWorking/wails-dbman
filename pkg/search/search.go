@@ -40,8 +40,8 @@ func Search(query string, connectionId, database string) ([]SearchResult, error)
 			dbMap[database] = true
 		} else {
 			// Add default database if set
-			if conn.Database != nil && *conn.Database != "" {
-				dbMap[*conn.Database] = true
+			if conn.Database != "" {
+				dbMap[conn.Database] = true
 			}
 
 			// Add any databases with cached schemas

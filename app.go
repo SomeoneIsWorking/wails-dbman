@@ -5,6 +5,7 @@ import (
 	"log"
 	"wails-dbman/pkg/adapters"
 	"wails-dbman/pkg/cache"
+	"wails-dbman/pkg/models"
 	"wails-dbman/pkg/search"
 )
 
@@ -27,14 +28,13 @@ func (a *App) createAdapter(connectionId string) (adapters.BaseAdapter, error) {
 		return nil, err
 	}
 	config := adapters.ConnectionConfig{
-		Type:             conn.Type,
-		Host:             conn.Host,
-		Port:             conn.Port,
-		Username:         conn.Username,
-		Password:         conn.Password,
-		Database:         conn.Database,
-		ConnectionString: conn.ConnectionString,
-		ConnectionID:     connectionId,
+		Type:         conn.Type,
+		Host:         conn.Host,
+		Port:         conn.Port,
+		Username:     conn.Username,
+		Password:     conn.Password,
+		Database:     conn.Database,
+		ConnectionID: connectionId,
 	}
 	factory := adapters.AdapterFactory{}
 	adapter, err := factory.CreateAdapter(config)
@@ -53,44 +53,28 @@ func (a *App) GetConnections() ([]cache.ConnectionDetail, error) {
 	result := make([]cache.ConnectionDetail, len(conns))
 	for i, conn := range conns {
 		detail := cache.ConnectionDetail{
-			ID:               conn.ID,
-			Name:             conn.Name,
-			Type:             conn.Type,
-			Host:             conn.Host,
-			Port:             conn.Port,
-			Username:         conn.Username,
-			Password:         conn.Password,
-			Database:         conn.Database,
-			ConnectionString: conn.ConnectionString,
+			ID:              conn.ID,
+			Name:            conn.Name,
+			Type:            conn.Type,
+			Host:            conn.Host,
+			Port:            conn.Port,
+			Username:        conn.Username,
+			Password:        conn.Password,
+			Database:        conn.Database,
+			HiddenDatabases: conn.HiddenDatabases,
+			ShowHidden:      conn.ShowHidden,
 		}
 
 		// Get all database names for this connection
 		dbNames, err := a.GetDatabases(conn.ID, false)
 		if err != nil {
-			log.Printf("Failed to load databases for %s: %v", conn.Name, err)
-			// Fallback to the configured database
-			if conn.Database != nil && *conn.Database != "" {
-				dbNames = []string{*conn.Database}
-			} else {
-				dbNames = []string{"master"}
-			}
-		}
-
-		// Ensure the selected database is in the list
-		selectedDb := "master"
-		if conn.Database != nil && *conn.Database != "" {
-			selectedDb = *conn.Database
-		}
-
-		foundSelected := false
-		for _, name := range dbNames {
-			if name == selectedDb {
-				foundSelected = true
-				break
-			}
-		}
-		if !foundSelected {
-			dbNames = append([]string{selectedDb}, dbNames...)
+			// Mark connection as having an error in response, but continue rendering other connections
+			errMsg := err.Error()
+			detail.HasError = true
+			detail.LastError = &errMsg
+			log.Printf("Error getting databases for connection %s: %v", conn.ID, err)
+			// Fallback to default database list
+			dbNames = []string{}
 		}
 
 		detail.Databases = make([]cache.DatabaseDetail, len(dbNames))
@@ -98,17 +82,6 @@ func (a *App) GetConnections() ([]cache.ConnectionDetail, error) {
 			dbDetail := cache.DatabaseDetail{
 				Name:   name,
 				Loaded: false,
-			}
-
-			// Pre-load schema for the selected database
-			if name == selectedDb {
-				schema, err := a.GetSchema(conn.ID, name, false)
-				if err == nil {
-					dbDetail.Schema = schema
-					dbDetail.Loaded = true
-				} else {
-					log.Printf("Failed to pre-load schema for %s.%s: %v", conn.Name, name, err)
-				}
 			}
 
 			detail.Databases[j] = dbDetail
@@ -120,7 +93,7 @@ func (a *App) GetConnections() ([]cache.ConnectionDetail, error) {
 	return result, nil
 }
 
-func (a *App) CreateConnection(conn cache.Connection) (cache.Connection, error) {
+func (a *App) CreateConnection(conn models.ConnectionPostModel) (cache.Connection, error) {
 	return cache.CreateConnection(conn)
 }
 
@@ -128,8 +101,12 @@ func (a *App) GetConnection(id string) (cache.Connection, error) {
 	return cache.GetConnection(id)
 }
 
-func (a *App) UpdateConnection(id string, data map[string]interface{}) (cache.Connection, error) {
+func (a *App) UpdateConnection(id string, data models.ConnectionPostModel) (cache.Connection, error) {
 	return cache.UpdateConnection(id, data)
+}
+
+func (a *App) UpdateConnectionSettings(id string, hiddenDatabases string, showHidden bool) error {
+	return cache.UpdateConnectionSettings(id, hiddenDatabases, showHidden)
 }
 
 func (a *App) DeleteConnection(id string) error {
@@ -138,13 +115,12 @@ func (a *App) DeleteConnection(id string) error {
 
 func (a *App) TestConnection(conn cache.Connection) error {
 	config := adapters.ConnectionConfig{
-		Type:             conn.Type,
-		Host:             conn.Host,
-		Port:             conn.Port,
-		Username:         conn.Username,
-		Password:         conn.Password,
-		Database:         conn.Database,
-		ConnectionString: conn.ConnectionString,
+		Type:     conn.Type,
+		Host:     conn.Host,
+		Port:     conn.Port,
+		Username: conn.Username,
+		Password: conn.Password,
+		Database: conn.Database,
 	}
 	factory := adapters.AdapterFactory{}
 	adapter, err := factory.CreateAdapter(config)

@@ -79,6 +79,7 @@ import {
 import ConnectionForm from "./connection/ConnectionForm.vue";
 import Dialog from "./Dialog.vue";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
+import { models } from "wailsjs/go/models";
 
 const props = defineProps<{
   isOpen: boolean;
@@ -104,30 +105,27 @@ const handleCancel = () => {
 };
 
 const handleSave = async () => {
-  try {
-    const connectionData = {
-      name: props.formState.form.name,
-      type: props.formState.form.type,
-      host: props.formState.form.host,
-      port: props.formState.form.port
-        ? parseInt(props.formState.form.port)
-        : undefined,
-      username: props.formState.form.username,
-      password: props.formState.form.password,
-      database: props.formState.form.database,
-    };
-
-    if (props.isEditing && props.connectionId) {
-      await UpdateConnection(props.connectionId, connectionData);
-    } else {
-      await CreateConnection(connectionData as any);
-    }
-
-    emit("save");
-  } catch (error) {
-    console.error("Failed to save connection:", error);
-    // TODO: Show error to user
+  const name = props.formState.form.name;
+  if (!name || name.trim() === "") {
+    return;
   }
+  const connectionData: models.ConnectionPostModel = {
+    name: name,
+    type: props.formState.form.type,
+    host: props.formState.form.host,
+    port: parseInt(props.formState.form.port),
+    username: props.formState.form.username,
+    password: props.formState.form.password,
+    database: props.formState.form.database,
+  };
+
+  if (props.isEditing && props.connectionId) {
+    await UpdateConnection(props.connectionId, connectionData);
+  } else {
+    await CreateConnection(connectionData);
+  }
+
+  emit("save");
 };
 
 const handleDelete = async () => {

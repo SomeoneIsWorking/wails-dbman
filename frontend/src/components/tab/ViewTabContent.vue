@@ -56,7 +56,6 @@
 
         <button class="btn-ghost" @click="refreshData">
           <RefreshCw class="w-3.5 h-3.5" />
-          Refresh
         </button>
       </div>
     </template>

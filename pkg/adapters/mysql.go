@@ -15,10 +15,7 @@ type MySQLAdapter struct {
 }
 
 func (a *MySQLAdapter) connect(database string) (*gorm.DB, error) {
-	if database == "" && a.config.Database != nil {
-		database = *a.config.Database
-	}
-
+	database = a.config.Database
 	dsn := a.buildDSN(database)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -28,27 +25,11 @@ func (a *MySQLAdapter) connect(database string) (*gorm.DB, error) {
 }
 
 func (a *MySQLAdapter) buildDSN(database string) string {
-	host := "localhost"
-	if a.config.Host != nil {
-		host = *a.config.Host
-	}
-	port := 3306
-	if a.config.Port != nil {
-		port = *a.config.Port
-	}
-	user := ""
-	if a.config.Username != nil {
-		user = *a.config.Username
-	}
-	password := ""
-	if a.config.Password != nil {
-		password = *a.config.Password
-	}
-	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, password, host, port, database)
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", a.config.Username, a.config.Password, a.config.Host, a.config.Port, database)
 }
 
 func (a *MySQLAdapter) ListDatabases() ([]string, error) {
-	db, err := a.connect("")
+	db, err := a.connect("master")
 	if err != nil {
 		return nil, err
 	}

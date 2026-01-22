@@ -12,8 +12,8 @@
       <header
         class="flex items-center justify-between border-b border-border bg-surface shadow-sm z-50 h-10"
       >
-        <OverlayScrollbarsComponent class="flex-1 items-center h-full">
-          <div class="flex">
+        <OverlayScrollbarsComponent class="flex-1">
+          <div class="flex items-center h-full">
             <TabBar />
             <button
               class="p-1 hover:bg-surface-hover rounded"
@@ -90,7 +90,7 @@ const newConnectionForm = useConnectionForm();
 const createNewQuery = () => {
   tabsStore.addQueryTab(
     tabsStore.activeTab?.connectionId || "",
-    tabsStore.activeTab?.database || ""
+    tabsStore.activeTab?.database || "",
   );
 };
 
