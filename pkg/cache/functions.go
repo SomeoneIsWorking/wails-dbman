@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"time"
+	"wails-dbman/pkg/models"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -129,19 +130,30 @@ func GetConnection(id string) (Connection, error) {
 	return connection, nil
 }
 
-func CreateConnection(data Connection) (Connection, error) {
-	data.ID = uuid.New().String()
-	data.CreatedAt = time.Now().Format(time.RFC3339)
-	data.UpdatedAt = time.Now().Format(time.RFC3339)
-	err := DB.Create(&data).Error
+func CreateConnection(data models.ConnectionPostModel) (Connection, error) {
+	c := Connection{
+		ID:              uuid.New().String(),
+		Name:            data.Name,
+		Type:            data.Type,
+		Host:            data.Host,
+		Port:            data.Port,
+		Username:        data.Username,
+		Password:        data.Password,
+		Database:        data.Database,
+		HiddenDatabases: "[]",
+		ShowHidden:      false,
+		CreatedAt:       time.Now().Format(time.RFC3339),
+		UpdatedAt:       time.Now().Format(time.RFC3339),
+	}
+	err := DB.Create(&c).Error
 	if err != nil {
 		log.Printf("Error creating connection: %v", err)
 		return Connection{}, err
 	}
-	return data, nil
+	return c, nil
 }
 
-func UpdateConnection(id string, data map[string]interface{}) (Connection, error) {
+func UpdateConnection(id string, updates models.ConnectionPostModel) (Connection, error) {
 	var connection Connection
 	err := DB.First(&connection, "id = ?", id).Error
 	if err != nil {
@@ -151,43 +163,36 @@ func UpdateConnection(id string, data map[string]interface{}) (Connection, error
 		log.Printf("Error finding connection: %v", err)
 		return Connection{}, err
 	}
-	// Update fields
-	if name, ok := data["name"].(string); ok {
-		connection.Name = name
+
+	// Build a map of fields we want to update explicitly.
+	// Using a map ensures zero values (empty strings, 0) are applied.
+	updatesMap := map[string]any{
+		"updated_at": time.Now().Format(time.RFC3339),
 	}
-	if connType, ok := data["type"].(string); ok {
-		connection.Type = connType
-	}
-	if host, ok := data["host"].(string); ok {
-		connection.Host = &host
-	}
-	if portVal, ok := data["port"]; ok {
-		if port, ok := portVal.(float64); ok {
-			p := int(port)
-			connection.Port = &p
-		} else if port, ok := portVal.(int); ok {
-			connection.Port = &port
-		}
-	}
-	if username, ok := data["username"].(string); ok {
-		connection.Username = &username
-	}
-	if password, ok := data["password"].(string); ok {
-		connection.Password = &password
-	}
-	if database, ok := data["database"].(string); ok {
-		connection.Database = &database
-	}
-	if connStr, ok := data["connectionString"].(string); ok {
-		connection.ConnectionString = &connStr
-	}
-	connection.UpdatedAt = time.Now().Format(time.RFC3339)
-	err = DB.Save(&connection).Error
+
+	// Only update the fields allowed in the "post"/update model.
+	updatesMap["name"] = updates.Name
+	updatesMap["type"] = updates.Type
+	updatesMap["host"] = updates.Host
+	updatesMap["port"] = updates.Port
+	updatesMap["username"] = updates.Username
+	updatesMap["password"] = updates.Password
+	updatesMap["database"] = updates.Database
+
+	err = DB.Model(&connection).Updates(updatesMap).Error
 	if err != nil {
 		log.Printf("Error updating connection: %v", err)
 		return Connection{}, err
 	}
 	return connection, nil
+}
+
+func UpdateConnectionSettings(id string, hiddenDatabases string, showHidden bool) error {
+	return DB.Model(&Connection{}).Where("id = ?", id).Updates(map[string]interface{}{
+		"hidden_databases": hiddenDatabases,
+		"show_hidden":      showHidden,
+		"updated_at":       time.Now().Format(time.RFC3339),
+	}).Error
 }
 
 func DeleteConnection(id string) error {

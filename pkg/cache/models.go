@@ -1,17 +1,18 @@
 package cache
 
 type Connection struct {
-	ID               string  `json:"id" gorm:"primaryKey"`
-	Name             string  `json:"name"`
-	Type             string  `json:"type"`
-	Host             *string `json:"host,omitempty"`
-	Port             *int    `json:"port,omitempty"`
-	Username         *string `json:"username,omitempty"`
-	Password         *string `json:"password,omitempty"`
-	Database         *string `json:"database,omitempty"`
-	ConnectionString *string `json:"connectionString,omitempty"`
-	CreatedAt        string  `json:"createdAt"`
-	UpdatedAt        string  `json:"updatedAt"`
+	ID              string `json:"id" gorm:"primaryKey"`
+	Name            string `json:"name" gorm:"not null"`
+	Type            string `json:"type" gorm:"not null"`
+	Host            string `json:"host" gorm:"not null"`
+	Port            int    `json:"port" gorm:"not null"`
+	Username        string `json:"username,omitempty"`
+	Password        string `json:"password,omitempty"`
+	Database        string `json:"database,omitempty"`
+	HiddenDatabases string `json:"hiddenDatabases" gorm:"default:'[]'"`
+	ShowHidden      bool   `json:"showHidden" gorm:"default:false"`
+	CreatedAt       string `json:"createdAt"`
+	UpdatedAt       string `json:"updatedAt"`
 
 	// Relations
 	Databases      []CachedDatabase `gorm:"foreignKey:ConnectionID"`

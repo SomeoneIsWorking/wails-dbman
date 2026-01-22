@@ -16,10 +16,6 @@ type PostgresAdapter struct {
 }
 
 func (a *PostgresAdapter) connect(database string) (*gorm.DB, error) {
-	if database == "" && a.config.Database != nil {
-		database = *a.config.Database
-	}
-
 	dsn := a.buildDSN(database)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -29,27 +25,15 @@ func (a *PostgresAdapter) connect(database string) (*gorm.DB, error) {
 }
 
 func (a *PostgresAdapter) buildDSN(database string) string {
-	host := "localhost"
-	if a.config.Host != nil {
-		host = *a.config.Host
-	}
-	port := 5432
-	if a.config.Port != nil {
-		port = *a.config.Port
-	}
-	user := ""
-	if a.config.Username != nil {
-		user = *a.config.Username
-	}
-	password := ""
-	if a.config.Password != nil {
-		password = *a.config.Password
-	}
+	host := a.config.Host
+	port := a.config.Port
+	user := a.config.Username
+	password := a.config.Password
 	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, database)
 }
 
 func (a *PostgresAdapter) ListDatabases() ([]string, error) {
-	db, err := a.connect("")
+	db, err := a.connect("master")
 	if err != nil {
 		return nil, err
 	}

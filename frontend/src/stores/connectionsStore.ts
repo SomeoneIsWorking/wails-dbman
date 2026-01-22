@@ -1,7 +1,11 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
 import { groupBy } from "lodash-es";
-import { GetConnections, GetSchema } from "wailsjs/go/main/App";
+import {
+  GetConnections,
+  GetSchema,
+  UpdateConnectionSettings,
+} from "wailsjs/go/main/App";
 import { cache } from "wailsjs/go/models";
 import type { TableInfo, ViewInfo, StoredProcedureInfo } from "../types/schema";
 
@@ -12,6 +16,7 @@ export interface DatabaseInfo {
   proceduresBySchema: Record<string, StoredProcedureInfo[]>;
   loaded: boolean;
   loading: boolean;
+  isHidden?: boolean;
 }
 
 export interface ExtendedConnection extends Omit<
@@ -35,6 +40,13 @@ export const useConnectionsStore = defineStore("connections", () => {
 
       // Transform connections to include database structure
       connections.value = enrichedConns.map((conn) => {
+        let hiddenForConn: string[] = [];
+        try {
+          hiddenForConn = JSON.parse(conn.hiddenDatabases || "[]");
+        } catch (e) {
+          console.error("Failed to parse hidden databases for", conn.id, e);
+        }
+
         return {
           ...conn,
           databases: conn.databases.map((db) => {
@@ -55,6 +67,7 @@ export const useConnectionsStore = defineStore("connections", () => {
               proceduresBySchema,
               loaded: db.loaded,
               loading: false,
+              isHidden: hiddenForConn.includes(db.name),
             };
           }),
         };
@@ -100,11 +113,109 @@ export const useConnectionsStore = defineStore("connections", () => {
     }
   };
 
+  const syncSettings = async (connectionId: string) => {
+    const conn = connections.value.find((c) => c.id === connectionId);
+    if (!conn) return;
+
+    try {
+      await UpdateConnectionSettings(
+        connectionId,
+        conn.hiddenDatabases,
+        conn.showHidden,
+      );
+    } catch (err) {
+      console.error("Failed to sync connection settings to backend:", err);
+    }
+  };
+
+  const hideDatabase = async (connectionId: string, dbName: string) => {
+    const conn = connections.value.find((c) => c.id === connectionId);
+    if (!conn) return;
+
+    let hiddenList: string[] = [];
+    try {
+      hiddenList = JSON.parse(conn.hiddenDatabases || "[]");
+    } catch (e) {}
+
+    if (!hiddenList.includes(dbName)) {
+      hiddenList.push(dbName);
+      const hiddenStr = JSON.stringify(hiddenList);
+
+      // Update local state
+      conn.hiddenDatabases = hiddenStr;
+      const db = conn.databases.find((d) => d.name === dbName);
+      if (db) db.isHidden = true;
+
+      // Sync with backend
+      await syncSettings(connectionId);
+    }
+  };
+
+  const showDatabase = async (connectionId: string, dbName: string) => {
+    const conn = connections.value.find((c) => c.id === connectionId);
+    if (!conn) return;
+
+    let hiddenList: string[] = [];
+    try {
+      hiddenList = JSON.parse(conn.hiddenDatabases || "[]");
+    } catch (e) {}
+
+    if (hiddenList.includes(dbName)) {
+      hiddenList = hiddenList.filter((name) => name !== dbName);
+      const hiddenStr = JSON.stringify(hiddenList);
+
+      // Update local state
+      conn.hiddenDatabases = hiddenStr;
+      const db = conn.databases.find((d) => d.name === dbName);
+      if (db) db.isHidden = false;
+
+      // Sync with backend
+      await syncSettings(connectionId);
+    }
+  };
+
+  const toggleShowHidden = async (connectionId: string) => {
+    const conn = connections.value.find((c) => c.id === connectionId);
+    if (!conn) return;
+
+    // Update local state
+    conn.showHidden = !conn.showHidden;
+
+    // Sync with backend
+    await syncSettings(connectionId);
+  };
+
+  const getConnectionString = (conn: cache.ConnectionDetail) => {
+    const { type, host, port, username, password, database } = conn;
+    if (!type || !host) return "";
+
+    switch (type) {
+      case "postgresql":
+        return `postgresql://${username || ""}${password ? `:${password}` : ""}${
+          username || password ? "@" : ""
+        }${host}${port ? `:${port}` : ""}/${database || ""}`;
+      case "mysql":
+        return `mysql://${username || ""}${password ? `:${password}` : ""}${
+          username || password ? "@" : ""
+        }${host}${port ? `:${port}` : ""}/${database || ""}`;
+      case "mssql":
+        return `Server=${host}${port ? `,${port}` : ""};Database=${
+          database || ""
+        };User Id=${username || ""};Password=${password || ""};`;
+      default:
+        return "";
+    }
+  };
+
   return {
     connections,
     loading,
     error,
     loadConnections,
     loadSchemaForDatabase,
+    hideDatabase,
+    showDatabase,
+    toggleShowHidden,
+    getConnectionString,
   };
 });

@@ -55,11 +55,9 @@
 
         <button class="btn-ghost" @click="refreshData">
           <RefreshCw class="w-3.5 h-3.5" />
-          Refresh
         </button>
         <button class="btn-ghost">
           <Download class="w-3.5 h-3.5" />
-          Export
         </button>
       </div>
     </template>

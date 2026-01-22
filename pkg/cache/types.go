@@ -121,16 +121,21 @@ type ProcedureDetailsData struct {
 }
 
 type ConnectionDetail struct {
-	ID               string           `json:"id"`
-	Name             string           `json:"name"`
-	Type             string           `json:"type"`
-	Host             *string          `json:"host,omitempty"`
-	Port             *int             `json:"port,omitempty"`
-	Username         *string          `json:"username,omitempty"`
-	Password         *string          `json:"password,omitempty"`
-	Database         *string          `json:"database,omitempty"`
-	ConnectionString *string          `json:"connectionString,omitempty"`
-	Databases        []DatabaseDetail `json:"databases"`
+	ID              string           `json:"id"`
+	Name            string           `json:"name"`
+	Type            string           `json:"type"`
+	Host            string           `json:"host"`
+	Port            int              `json:"port"`
+	Username        string           `json:"username,omitempty"`
+	Password        string           `json:"password,omitempty"`
+	Database        string           `json:"database,omitempty"`
+	HiddenDatabases string           `json:"hiddenDatabases"`
+	ShowHidden      bool             `json:"showHidden"`
+	Databases       []DatabaseDetail `json:"databases"`
+
+	// Error state exposed to frontend
+	LastError *string `json:"lastError,omitempty"`
+	HasError  bool    `json:"hasError"`
 }
 
 type DatabaseDetail struct {

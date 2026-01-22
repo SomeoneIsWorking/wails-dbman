@@ -6,14 +6,13 @@ import (
 )
 
 type ConnectionConfig struct {
-	Type             string  `json:"type"`
-	ConnectionID     string  `json:"connectionId"`
-	Host             *string `json:"host,omitempty"`
-	Port             *int    `json:"port,omitempty"`
-	Username         *string `json:"username,omitempty"`
-	Password         *string `json:"password,omitempty"`
-	Database         *string `json:"database,omitempty"`
-	ConnectionString *string `json:"connectionString,omitempty"`
+	Type         string `json:"type"`
+	ConnectionID string `json:"connectionId"`
+	Host         string `json:"host,omitempty"`
+	Port         int    `json:"port,omitempty"`
+	Username     string `json:"username,omitempty"`
+	Password     string `json:"password,omitempty"`
+	Database     string `json:"database,omitempty"`
 }
 
 type BaseAdapter interface {
