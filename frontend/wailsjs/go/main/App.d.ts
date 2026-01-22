@@ -12,7 +12,7 @@ export function DeleteConnection(arg1:string):Promise<void>;
 
 export function GetConnection(arg1:string):Promise<cache.Connection>;
 
-export function GetConnections():Promise<Array<cache.Connection>>;
+export function GetConnections():Promise<Array<cache.ConnectionDetail>>;
 
 export function GetDatabases(arg1:string,arg2:boolean):Promise<Array<string>>;
 

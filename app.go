@@ -44,8 +44,80 @@ func (a *App) createAdapter(connectionId string) (adapters.BaseAdapter, error) {
 	return adapter, nil
 }
 
-func (a *App) GetConnections() ([]cache.Connection, error) {
-	return cache.GetConnections()
+func (a *App) GetConnections() ([]cache.ConnectionDetail, error) {
+	conns, err := cache.GetConnections()
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]cache.ConnectionDetail, len(conns))
+	for i, conn := range conns {
+		detail := cache.ConnectionDetail{
+			ID:               conn.ID,
+			Name:             conn.Name,
+			Type:             conn.Type,
+			Host:             conn.Host,
+			Port:             conn.Port,
+			Username:         conn.Username,
+			Password:         conn.Password,
+			Database:         conn.Database,
+			ConnectionString: conn.ConnectionString,
+		}
+
+		// Get all database names for this connection
+		dbNames, err := a.GetDatabases(conn.ID, false)
+		if err != nil {
+			log.Printf("Failed to load databases for %s: %v", conn.Name, err)
+			// Fallback to the configured database
+			if conn.Database != nil && *conn.Database != "" {
+				dbNames = []string{*conn.Database}
+			} else {
+				dbNames = []string{"master"}
+			}
+		}
+
+		// Ensure the selected database is in the list
+		selectedDb := "master"
+		if conn.Database != nil && *conn.Database != "" {
+			selectedDb = *conn.Database
+		}
+
+		foundSelected := false
+		for _, name := range dbNames {
+			if name == selectedDb {
+				foundSelected = true
+				break
+			}
+		}
+		if !foundSelected {
+			dbNames = append([]string{selectedDb}, dbNames...)
+		}
+
+		detail.Databases = make([]cache.DatabaseDetail, len(dbNames))
+		for j, name := range dbNames {
+			dbDetail := cache.DatabaseDetail{
+				Name:   name,
+				Loaded: false,
+			}
+
+			// Pre-load schema for the selected database
+			if name == selectedDb {
+				schema, err := a.GetSchema(conn.ID, name, false)
+				if err == nil {
+					dbDetail.Schema = schema
+					dbDetail.Loaded = true
+				} else {
+					log.Printf("Failed to pre-load schema for %s.%s: %v", conn.Name, name, err)
+				}
+			}
+
+			detail.Databases[j] = dbDetail
+		}
+
+		result[i] = detail
+	}
+
+	return result, nil
 }
 
 func (a *App) CreateConnection(conn cache.Connection) (cache.Connection, error) {
