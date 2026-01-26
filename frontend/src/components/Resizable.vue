@@ -4,7 +4,7 @@
       <slot />
     </div>
     <div
-      class="w-1 bg-border/50 cursor-col-resize hover:bg-primary/50 transition-colors"
+      :class="resizerClass"
       @mousedown="onMouseDown"
       @touchstart.prevent="onTouchStart"
     ></div>
@@ -21,8 +21,13 @@ const props = defineProps({
   horizontal: { type: Boolean, default: false },
 });
 
+const emit = defineEmits<{
+  "update:width": [value: number];
+}>();
+
 const localWidth = ref(props.width);
 watch(() => props.width, (v) => (localWidth.value = v));
+watch(localWidth, (v) => emit("update:width", v));
 
 const containerRef = ref<HTMLElement | null>(null);
 let isResizing = false;
@@ -88,5 +93,11 @@ onBeforeUnmount(removeListeners);
 
 const containerClass = computed(() =>
   props.horizontal ? "flex items-stretch" : "flex flex-col"
+);
+
+const resizerClass = computed(() =>
+  props.horizontal
+    ? "w-1 bg-border/50 cursor-col-resize hover:bg-primary/50 transition-colors"
+    : "h-1 bg-border/50 cursor-row-resize hover:bg-primary/50 transition-colors"
 );
 </script>

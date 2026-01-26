@@ -8,14 +8,14 @@ export async function loadViewData(tab: ViewTab) {
 
   try {
     const connectionsStore = useConnectionsStore();
-    const [schemaName, viewName] = tab.objectName.split(".");
+    const [databaseName, schemaName, viewName] = tab.objectName.split(".");
 
     // Find connection and view info from store
     const connection = connectionsStore.connections.find(
       (c) => c.id === tab.connectionId
     );
     const databaseInfo = connection?.databases.find(
-      (d) => d.name === tab.database
+      (d) => d.name === databaseName
     );
     const viewInfo = databaseInfo?.viewsBySchema[schemaName]?.find(
       (v) => v.name === viewName
@@ -30,7 +30,7 @@ export async function loadViewData(tab: ViewTab) {
     const [response, total] = await Promise.all([
       GetViewData(
         tab.connectionId,
-        tab.database,
+        databaseName,
         schemaName,
         viewName,
         tab.state.page + 1,
@@ -38,7 +38,7 @@ export async function loadViewData(tab: ViewTab) {
       ),
       GetTableDataCount({
         connectionId: tab.connectionId,
-        database: tab.database,
+        database: databaseName,
         schema: schemaName,
         tableName: viewName,
         filters: [], // Views don't have filters in UI yet

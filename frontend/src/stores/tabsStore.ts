@@ -3,8 +3,10 @@ import { loadTableData } from "../utils/tableDataLoader";
 import { loadViewData } from "../utils/viewDataLoader";
 import { loadProcedureData } from "../utils/procedureDataLoader";
 import type { cache } from "wailsjs/go/models";
+import { SaveTab, LoadTabs, DeleteTab } from "wailsjs/go/main/App";
 import { defineStore } from "pinia";
 import type { ColumnInfo } from "../types/schema";
+import { mapToPersistent, mapFromPersistent } from "../utils/tabPersistence";
 
 type CommonTab = {
   id: string;
@@ -13,8 +15,17 @@ type CommonTab = {
   database: string;
 };
 
+export type QueryTabState = {
+  content: string;
+  loading: boolean;
+  error: string | null;
+  results?: any;
+  resultHeight: number;
+};
+
 export type QueryTab = {
   type: "query";
+  state: QueryTabState;
 } & CommonTab;
 
 export type TableTab = {
@@ -85,6 +96,54 @@ export type LogEntry = {
   timestamp: string;
 };
 
+// Helper functions for tab persistence
+const serializeTabData = (tab: Tab): string => {
+  return mapToPersistent(tab);
+};
+
+const deserializeTabData = (data: string, tabType: Tab["type"]): any => {
+  return mapFromPersistent(data, tabType);
+};
+
+const saveTabToBackend = async (tab: Tab) => {
+  const objectName = "objectName" in tab ? tab.objectName || "" : "";
+  await SaveTab(
+    tab.id,
+    tab.type,
+    tab.title,
+    tab.connectionId,
+    tab.database,
+    objectName,
+    serializeTabData(tab)
+  );
+};
+
+const deleteTabFromBackend = async (tabId: string) => {
+  await DeleteTab(tabId);
+};
+
+const loadTabsFromBackend = async (): Promise<Tab[]> => {
+  const backendTabs = await LoadTabs();
+  return backendTabs.map(backendTab => {
+    const state = backendTab.data ? deserializeTabData(backendTab.data, backendTab.type as Tab["type"]) : deserializeTabData("{}", backendTab.type as Tab["type"]);
+    
+    const baseTab = {
+      id: backendTab.id,
+      type: backendTab.type as Tab["type"],
+      title: backendTab.title,
+      connectionId: backendTab.connectionId,
+      database: backendTab.database,
+      state,
+    };
+
+    if (backendTab.type === "query") {
+      return baseTab as QueryTab;
+    } else {
+      return { ...baseTab, objectName: backendTab.objectName || "" } as TableTab | ViewTab | ProcedureTab;
+    }
+  });
+};
+
 export const useTabsStore = defineStore("tabs", () => {
   const tabs = ref<Tab[]>([]);
 
@@ -101,6 +160,9 @@ export const useTabsStore = defineStore("tabs", () => {
     const addedTab = tabs.value[tabs.value.length - 1] as T;
     activeTab.value = addedTab;
     callback?.(addedTab);
+    
+    // Save tab to backend
+    saveTabToBackend(addedTab);
   };
 
   const addTableTab = (
@@ -116,7 +178,7 @@ export const useTabsStore = defineStore("tabs", () => {
       title: `${schema}.${tableName}`,
       connectionId,
       database,
-      objectName: `${schema}.${tableName}`,
+      objectName: `${database}.${schema}.${tableName}`,
       state: {
         loading: true,
         error: null,
@@ -156,7 +218,7 @@ export const useTabsStore = defineStore("tabs", () => {
       title: `${schema}.${viewName}`,
       connectionId,
       database,
-      objectName: `${schema}.${viewName}`,
+      objectName: `${database}.${schema}.${viewName}`,
       state: {
         loading: true,
         error: null,
@@ -197,7 +259,7 @@ export const useTabsStore = defineStore("tabs", () => {
       title: `${schema}.${procedureName}`,
       connectionId,
       database,
-      objectName: `${schema}.${procedureName}`,
+      objectName: `${database}.${schema}.${procedureName}`,
       state: {
         loading: true,
         error: null,
@@ -218,6 +280,12 @@ export const useTabsStore = defineStore("tabs", () => {
       title: "Query",
       connectionId,
       database,
+      state: {
+        content: "SELECT * FROM Users LIMIT 100;",
+        loading: false,
+        error: null,
+        resultHeight: 250,
+      },
     });
   };
 
@@ -230,12 +298,25 @@ export const useTabsStore = defineStore("tabs", () => {
           activeTab.value = tabs.value[Math.min(index, tabs.value.length - 1)];
         }
       }
+      // Delete tab from backend
+      deleteTabFromBackend(tab.id);
     }
   };
 
   const setActiveTab = (tab: Tab) => {
     activeTab.value = tab;
   };
+
+  const initTabs = async () => {
+    const loadedTabs = await loadTabsFromBackend();
+    tabs.value = loadedTabs;
+    if (loadedTabs.length > 0) {
+      activeTab.value = loadedTabs[0];
+    }
+  };
+
+  // Initialize tabs from backend
+  initTabs();
 
   return {
     tabs,

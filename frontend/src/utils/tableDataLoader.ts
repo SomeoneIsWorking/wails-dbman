@@ -9,16 +9,26 @@ export async function loadTableData(tab: TableTab) {
 
   try {
     const connectionsStore = useConnectionsStore();
-    const [schemaName, tableName] = tab.objectName.split(".");
+    const [databaseName, schemaName, tableName] = tab.objectName.split(".");
 
     // Find connection and table info from store instead of fetching
     const connection = connectionsStore.connections.find(
       (c) => c.id === tab.connectionId
     );
     const databaseInfo = connection?.databases.find(
-      (d) => d.name === tab.database
+      (d) => d.name === databaseName
     );
-    const tableInfo = databaseInfo?.tablesBySchema[schemaName]?.find(
+
+    if (!databaseInfo) {
+      throw new Error(`Database ${databaseName} not found for connection ${tab.connectionId}`);
+    }
+
+    // Ensure schema is loaded
+    if (!databaseInfo.loaded) {
+      await connectionsStore.loadSchemaForDatabase(tab.connectionId, databaseInfo);
+    }
+
+    const tableInfo = databaseInfo.tablesBySchema[schemaName]?.find(
       (t) => t.name === tableName
     );
 
@@ -31,7 +41,7 @@ export async function loadTableData(tab: TableTab) {
     const promises: [Promise<any>, Promise<number> | null] = [
       GetTableData({
         connectionId: tab.connectionId,
-        database: tab.database,
+        database: databaseName,
         schema: schemaName,
         tableName: tableName,
         page: tab.state.page + 1,
@@ -46,7 +56,7 @@ export async function loadTableData(tab: TableTab) {
     if (tab.state.totalRows === 0 || filtersChanged) {
       promises[1] = GetTableDataCount({
         connectionId: tab.connectionId,
-        database: tab.database,
+        database: databaseName,
         schema: schemaName,
         tableName: tableName,
         filters: tab.state.filters || [],

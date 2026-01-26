@@ -329,3 +329,23 @@ func (a *App) GetViewData(connectionId, database, schema, viewName string, page,
 
 	return adapter.GetTableData(database, schema, viewName, options)
 }
+
+// SaveTab saves a tab to the backend
+func (a *App) SaveTab(tabID, tabType, title, connectionID, database, objectName, data string) error {
+	return cache.SaveTab(tabID, tabType, title, connectionID, database, objectName, data)
+}
+
+// LoadTabs loads all tabs from the backend
+func (a *App) LoadTabs() ([]cache.Tab, error) {
+	return cache.LoadTabs()
+}
+
+// DeleteTab deletes a tab from the backend
+func (a *App) DeleteTab(tabID string) error {
+	return cache.DeleteTab(tabID)
+}
+
+// ClearAllTabs deletes all tabs from the backend
+func (a *App) ClearAllTabs() error {
+	return cache.ClearAllTabs()
+}
