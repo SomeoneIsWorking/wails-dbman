@@ -7,9 +7,13 @@ import {search} from '../models';
 
 export function AnalyzeProcedure(arg1:string,arg2:string,arg3:string,arg4:string):Promise<cache.StoredProcedureInfo>;
 
+export function ClearAllTabs():Promise<void>;
+
 export function CreateConnection(arg1:models.ConnectionPostModel):Promise<cache.Connection>;
 
 export function DeleteConnection(arg1:string):Promise<void>;
+
+export function DeleteTab(arg1:string):Promise<void>;
 
 export function GetConnection(arg1:string):Promise<cache.Connection>;
 
@@ -24,6 +28,10 @@ export function GetTableData(arg1:main.GetTableDataRequest):Promise<cache.TableD
 export function GetTableDataCount(arg1:main.GetTableDataCountRequest):Promise<number>;
 
 export function GetViewData(arg1:string,arg2:string,arg3:string,arg4:string,arg5:number,arg6:number):Promise<cache.TableDataResponse>;
+
+export function LoadTabs():Promise<Array<cache.Tab>>;
+
+export function SaveTab(arg1:string,arg2:string,arg3:string,arg4:string,arg5:string,arg6:string,arg7:string):Promise<void>;
 
 export function Search(arg1:string,arg2:string,arg3:string):Promise<Array<search.SearchResult>>;
 

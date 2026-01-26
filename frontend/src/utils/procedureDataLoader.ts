@@ -5,11 +5,11 @@ export async function loadProcedureData(tab: ProcedureTab) {
   tab.state.loading = true;
   tab.state.error = null;
   try {
-    const [schema, procedureName] = tab.objectName.split(".");
+    const [database, schema, procedureName] = tab.objectName.split(".");
 
     const info = await AnalyzeProcedure(
       tab.connectionId,
-      tab.database,
+      database,
       schema,
       procedureName
     );

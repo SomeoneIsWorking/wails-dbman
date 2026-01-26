@@ -302,6 +302,17 @@ export namespace cache {
 	    cached: boolean;
 	    lastCached: string;
 	}
+	export interface Tab {
+	    id: string;
+	    type: string;
+	    title: string;
+	    connectionId: string;
+	    database: string;
+	    objectName?: string;
+	    data: string;
+	    createdAt: string;
+	    updatedAt: string;
+	}
 	export interface TableDataResponse {
 	    results: any[];
 	    total: number;

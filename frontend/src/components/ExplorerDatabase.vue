@@ -12,7 +12,7 @@
       >
         <Loader2 v-if="database.loading" class="w-3 h-3 mr-1 animate-spin" />
         <DatabaseIcon v-else class="w-3 h-3 mr-1" />
-        <span class="font-medium flex-1 text-xs truncate">{{
+        <span class="font-medium flex-1 text-xs">{{
           database.name
         }}</span>
       </div>
@@ -45,11 +45,11 @@
             <div
               v-for="table in database.tablesBySchema[schema]"
               :key="`${database.name}-${table.schema}.${table.name}`"
-              class="flex ml-1 mt-1 items-center cursor-pointer hover:bg-surface-hover p-1 rounded"
+              :class="baseItemClass"
               @click="$emit('openTable', table)"
             >
               <Table class="w-3 h-3 mr-2 text-success" />
-              <span>{{ table.name }}</span>
+              <span class="truncate">{{ table.name }}</span>
             </div>
           </CollapsibleItem>
         </template>
@@ -57,13 +57,13 @@
           <div
             v-for="table in Object.values(
               database.tablesBySchema,
-            ).flat() as any[]"
+            ).flat()"
             :key="`${database.name}-${table.schema}.${table.name}`"
-            class="flex ml- mt-1 items-center cursor-pointer hover:bg-surface-hover p-1 rounded"
+            :class="baseItemClass"
             @click="$emit('openTable', table)"
           >
             <Table class="w-3 h-3 mr-2 text-success" />
-            <span>{{ table.schema }}.{{ table.name }}</span>
+            <span class="truncate">{{ table.schema }}.{{ table.name }}</span>
           </div>
         </template>
       </CollapsibleItem>
@@ -94,11 +94,11 @@
             <div
               v-for="view in database.viewsBySchema[schema]"
               :key="`${database.name}-${view.schema}.${view.name}`"
-              class="flex ml-1 mt-1 items-center cursor-pointer hover:bg-surface-hover p-1 rounded text-xs"
+              :class="baseItemClass"
               @click="$emit('openView', view)"
             >
               <Eye class="w-3 h-3 mr-2 text-accent" />
-              <span>{{ view.name }}</span>
+              <span class="truncate">{{ view.name }}</span>
             </div>
           </CollapsibleItem>
         </template>
@@ -106,13 +106,13 @@
           <div
             v-for="view in Object.values(
               database.viewsBySchema,
-            ).flat() as any[]"
+            ).flat()"
             :key="`${database.name}-${view.schema}.${view.name}`"
-            class="flex ml-1 mt-1 items-center cursor-pointer hover:bg-surface-hover p-1 rounded text-xs"
+            :class="baseItemClass"
             @click="$emit('openView', view)"
           >
             <Eye class="w-3 h-3 mr-2 text-accent" />
-            <span>{{ view.schema }}.{{ view.name }}</span>
+            <span class="truncate">{{ view.schema }}.{{ view.name }}</span>
           </div>
         </template>
       </CollapsibleItem>
@@ -144,11 +144,11 @@
               <div
                 v-for="proc in database.proceduresBySchema[schema]"
                 :key="`${database.name}-${proc.schema}.${proc.name}`"
-                class="flex items-center cursor-pointer hover:bg-surface-hover p-1 rounded text-xs"
+                :class="baseItemClass"
                 @click="$emit('openProcedure', proc)"
               >
                 <Settings class="w-3 h-3 mr-2 text-warning" />
-                <span>{{ proc.name }}</span>
+                <span class="truncate">{{ proc.name }}</span>
               </div>
             </div>
           </CollapsibleItem>
@@ -158,9 +158,9 @@
             <div
               v-for="proc in Object.values(
                 database.proceduresBySchema,
-              ).flat() as any[]"
+              ).flat()"
               :key="`${database.name}-${proc.schema}.${proc.name}`"
-              class="flex ml-2 items-center cursor-pointer hover:bg-surface-hover p-1 rounded text-xs"
+              :class="baseItemClass"
               @click="$emit('openProcedure', proc)"
             >
               <Settings class="w-3 h-3 mr-2 text-warning" />
@@ -202,6 +202,8 @@ const emit = defineEmits<{
 }>();
 
 const expandedItems = ref<Record<string, boolean>>({});
+
+const baseItemClass = "flex ml-1 mt-1 items-center cursor-pointer hover:bg-surface-hover p-1 rounded text-xs";
 
 const toggleItem = (key: string) => {
   expandedItems.value[key] = !expandedItems.value[key];

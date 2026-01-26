@@ -6,12 +6,20 @@ export function AnalyzeProcedure(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['AnalyzeProcedure'](arg1, arg2, arg3, arg4);
 }
 
+export function ClearAllTabs() {
+  return window['go']['main']['App']['ClearAllTabs']();
+}
+
 export function CreateConnection(arg1) {
   return window['go']['main']['App']['CreateConnection'](arg1);
 }
 
 export function DeleteConnection(arg1) {
   return window['go']['main']['App']['DeleteConnection'](arg1);
+}
+
+export function DeleteTab(arg1) {
+  return window['go']['main']['App']['DeleteTab'](arg1);
 }
 
 export function GetConnection(arg1) {
@@ -40,6 +48,14 @@ export function GetTableDataCount(arg1) {
 
 export function GetViewData(arg1, arg2, arg3, arg4, arg5, arg6) {
   return window['go']['main']['App']['GetViewData'](arg1, arg2, arg3, arg4, arg5, arg6);
+}
+
+export function LoadTabs() {
+  return window['go']['main']['App']['LoadTabs']();
+}
+
+export function SaveTab(arg1, arg2, arg3, arg4, arg5, arg6, arg7) {
+  return window['go']['main']['App']['SaveTab'](arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 }
 
 export function Search(arg1, arg2, arg3) {

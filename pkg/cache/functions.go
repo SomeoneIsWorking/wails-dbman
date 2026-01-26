@@ -793,3 +793,57 @@ func ClosePrismaConnection() error {
 	}
 	return sqlDB.Close()
 }
+
+// SaveTab saves a tab to the database
+func SaveTab(tabID, tabType, title, connectionID, database, objectName, data string) error {
+	now := time.Now().Format(time.RFC3339)
+	tab := Tab{
+		ID:           tabID,
+		Type:         tabType,
+		Title:        title,
+		ConnectionID: connectionID,
+		Database:     database,
+		ObjectName:   objectName,
+		Data:         data,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+
+	err := DB.Save(&tab).Error
+	if err != nil {
+		log.Printf("Error saving tab: %v", err)
+		return err
+	}
+	return nil
+}
+
+// LoadTabs loads all tabs from the database
+func LoadTabs() ([]Tab, error) {
+	var tabs []Tab
+	err := DB.Find(&tabs).Error
+	if err != nil {
+		log.Printf("Error loading tabs: %v", err)
+		return nil, err
+	}
+	return tabs, nil
+}
+
+// DeleteTab deletes a tab from the database
+func DeleteTab(tabID string) error {
+	err := DB.Delete(&Tab{}, "id = ?", tabID).Error
+	if err != nil {
+		log.Printf("Error deleting tab: %v", err)
+		return err
+	}
+	return nil
+}
+
+// ClearAllTabs deletes all tabs from the database
+func ClearAllTabs() error {
+	err := DB.Exec("DELETE FROM tabs").Error
+	if err != nil {
+		log.Printf("Error clearing all tabs: %v", err)
+		return err
+	}
+	return nil
+}

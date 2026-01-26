@@ -27,7 +27,7 @@
 
         <div class="h-4 w-px bg-border mx-1"></div>
 
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-1 whitespace-nowrap">
           <button
             :disabled="tableState!.page < 1"
             @click="goToPage(tableState!.page - 1)"

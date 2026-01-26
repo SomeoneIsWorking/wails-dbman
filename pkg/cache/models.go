@@ -191,3 +191,15 @@ type ResultSetColumn struct {
 
 	ResultSet ProcedureResultSet `gorm:"foreignKey:ResultSetID"`
 }
+
+type Tab struct {
+	ID           string `json:"id" gorm:"primaryKey"`
+	Type         string `json:"type"` // "query", "table", "view", "procedure"
+	Title        string `json:"title"`
+	ConnectionID string `json:"connectionId"`
+	Database     string `json:"database"`
+	ObjectName   string `json:"objectName,omitempty"` // for table/view/procedure
+	Data         string `json:"data"`                 // JSON string of the tab state
+	CreatedAt    string `json:"createdAt"`
+	UpdatedAt    string `json:"updatedAt"`
+}

@@ -2,43 +2,39 @@
   <div class="h-full flex flex-col overflow-hidden">
     <!-- Compact Header -->
     <div
-      class="flex items-center justify-between border-b border-border bg-surface px-2 py-1"
+      class="flex items-center border-b border-border bg-surface px-2 py-1"
     >
-      <div class="flex items-center gap-3 min-w-0">
-        <!-- Icon and Title -->
-        <div class="flex items-center gap-1.5">
-          <component
-            v-if="icon"
-            :is="icon"
-            class="w-4 h-4"
-            :class="iconClass || 'text-foreground-secondary'"
-          />
-          <h3
-            class="text-xs font-semibold text-foreground truncate max-w-[250px] select-none"
-            :title="title"
-          >
-            {{ title }}
-          </h3>
-        </div>
+      <!-- Icon and Title -->
+      <component
+        v-if="icon"
+        :is="icon"
+        class="w-4 h-4 mr-2"
+        :class="iconClass || 'text-foreground-secondary'"
+      />
+      <h3
+        class="text-xs font-semibold text-foreground truncate select-none"
+        :title="title"
+      >
+        {{ title }}
+      </h3>
 
-        <div
-          v-if="tabs && tabs.length > 0"
-          class="h-4 w-px bg-border mx-1"
-        ></div>
+      <div
+        v-if="tabs && tabs.length > 0"
+        class="h-4 w-px bg-border mx-2"
+      ></div>
 
-        <!-- Tabs -->
-        <nav v-if="tabs && tabs.length > 0" class="tab-nav">
-          <button
-            v-for="tab in tabs"
-            :key="tab.id"
-            @click="$emit('update:activeTab', tab.id)"
-            :class="['tab-item', activeTab === tab.id ? 'tab-item-active' : '']"
-          >
-            {{ tab.label }}
-          </button>
-        </nav>
-      </div>
-
+      <!-- Tabs -->
+      <nav v-if="tabs && tabs.length > 0" class="tab-nav">
+        <button
+          v-for="tab in tabs"
+          :key="tab.id"
+          @click="$emit('update:activeTab', tab.id)"
+          :class="['tab-item', activeTab === tab.id ? 'tab-item-active' : '']"
+        >
+          {{ tab.label }}
+        </button>
+      </nav>
+      <div class="flex-grow"></div>
       <!-- Actions Slot -->
       <div class="flex items-center gap-2 ml-4">
         <slot name="actions" />
