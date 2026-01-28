@@ -338,6 +338,8 @@ export namespace main {
 	    page: number;
 	    limit: number;
 	    filters: cache.Filter[];
+	    sortColumn?: string;
+	    sortDirection?: string;
 	}
 
 }

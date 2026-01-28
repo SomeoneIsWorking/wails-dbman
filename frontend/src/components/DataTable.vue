@@ -6,9 +6,28 @@
           <th
             v-for="column in columns"
             :key="column"
-            class="px-3 py-1.5 bg-surface-hover/80 backdrop-blur-md border-b border-border select-none"
+            class="px-3 py-1.5 bg-surface-hover/80 backdrop-blur-md border-b border-border select-none cursor-pointer hover:bg-surface-hover transition-colors"
+            @click="handleSort(column)"
           >
-            {{ column }}
+            <div class="flex items-center gap-1">
+              <span>{{ column }}</span>
+              <div class="flex flex-col">
+                <ChevronUp
+                  class="w-3 h-3 -mb-0.5"
+                  :class="{
+                    'text-primary': sortColumn === column && sortDirection === 'asc',
+                    'text-foreground-secondary/30': sortColumn !== column || sortDirection !== 'asc'
+                  }"
+                />
+                <ChevronDown
+                  class="w-3 h-3 -mt-0.5"
+                  :class="{
+                    'text-primary': sortColumn === column && sortDirection === 'desc',
+                    'text-foreground-secondary/30': sortColumn !== column || sortDirection !== 'desc'
+                  }"
+                />
+              </div>
+            </div>
           </th>
         </tr>
       </thead>
@@ -45,13 +64,27 @@
 </template>
 
 <script setup lang="ts">
-import { Database } from "lucide-vue-next";
+import { Database, ChevronUp, ChevronDown } from "lucide-vue-next";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
 
 interface Props {
   data: Record<string, any>[];
   columns: string[];
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  sort: [column: string, direction: 'asc' | 'desc'];
+}>();
+
+const handleSort = (column: string) => {
+  let direction: 'asc' | 'desc' = 'asc';
+  if (props.sortColumn === column && props.sortDirection === 'asc') {
+    direction = 'desc';
+  }
+  emit('sort', column, direction);
+};
 </script>

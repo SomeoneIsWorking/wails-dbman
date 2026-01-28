@@ -269,13 +269,15 @@ func (a *App) AnalyzeProcedure(connectionId, database, schema, name string) (*ca
 }
 
 type GetTableDataRequest struct {
-	ConnectionID string         `json:"connectionId"`
-	Database     string         `json:"database"`
-	Schema       string         `json:"schema"`
-	TableName    string         `json:"tableName"`
-	Page         int            `json:"page"`
-	Limit        int            `json:"limit"`
-	Filters      []cache.Filter `json:"filters"`
+	ConnectionID  string         `json:"connectionId"`
+	Database      string         `json:"database"`
+	Schema        string         `json:"schema"`
+	TableName     string         `json:"tableName"`
+	Page          int            `json:"page"`
+	Limit         int            `json:"limit"`
+	Filters       []cache.Filter `json:"filters"`
+	SortColumn    string         `json:"sortColumn,omitempty"`
+	SortDirection string         `json:"sortDirection,omitempty"`
 }
 
 type GetTableDataCountRequest struct {
@@ -294,9 +296,11 @@ func (a *App) GetTableData(request GetTableDataRequest) (*cache.TableDataRespons
 
 	// Get table data with pagination
 	options := map[string]interface{}{
-		"page":    request.Page,
-		"limit":   request.Limit,
-		"filters": request.Filters,
+		"page":          request.Page,
+		"limit":         request.Limit,
+		"filters":       request.Filters,
+		"sortColumn":    request.SortColumn,
+		"sortDirection": request.SortDirection,
 	}
 
 	return adapter.GetTableData(request.Database, request.Schema, request.TableName, options)

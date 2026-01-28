@@ -59,6 +59,8 @@ export type TableTabState = {
   activeTab: "data" | "schema";
   filters: any[];
   lastFilters?: any[];
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
 };
 
 export type ViewTabState = {
