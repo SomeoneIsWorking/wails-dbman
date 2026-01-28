@@ -103,10 +103,22 @@ func (a *MySQLAdapter) GetTableData(database, schema, tableName string, options 
 		limit = l
 	}
 	filters, _ := options["filters"].([]cache.Filter)
+	sortColumn, _ := options["sortColumn"].(string)
+	sortDirection, _ := options["sortDirection"].(string)
 
 	whereClause, args := a.buildWhereClause(filters)
 	offset := (page - 1) * limit
-	query := fmt.Sprintf("SELECT * FROM %s%s LIMIT %d OFFSET %d", tableName, whereClause, limit, offset)
+
+	orderByClause := ""
+	if sortColumn != "" {
+		direction := "ASC"
+		if sortDirection == "desc" {
+			direction = "DESC"
+		}
+		orderByClause = fmt.Sprintf(" ORDER BY `%s` %s", sortColumn, direction)
+	}
+
+	query := fmt.Sprintf("SELECT * FROM %s%s%s LIMIT %d OFFSET %d", tableName, whereClause, orderByClause, limit, offset)
 
 	db, err := a.connect(database)
 	if err != nil {

@@ -390,10 +390,22 @@ func (a *MSSQLAdapter) GetTableData(database, schema, tableName string, options 
 		limit = l
 	}
 	filters, _ := options["filters"].([]cache.Filter)
+	sortColumn, _ := options["sortColumn"].(string)
+	sortDirection, _ := options["sortDirection"].(string)
 
 	whereClause, args := a.buildWhereClause(filters)
 	offset := (page - 1) * limit
-	query := fmt.Sprintf("SELECT * FROM %s.%s%s ORDER BY (SELECT NULL) OFFSET %d ROWS FETCH NEXT %d ROWS ONLY", schema, tableName, whereClause, offset, limit)
+
+	orderByClause := "ORDER BY (SELECT NULL)"
+	if sortColumn != "" {
+		direction := "ASC"
+		if sortDirection == "desc" {
+			direction = "DESC"
+		}
+		orderByClause = fmt.Sprintf("ORDER BY [%s] %s", sortColumn, direction)
+	}
+
+	query := fmt.Sprintf("SELECT * FROM %s.%s%s %s OFFSET %d ROWS FETCH NEXT %d ROWS ONLY", schema, tableName, whereClause, orderByClause, offset, limit)
 	log.Printf("Executing query: %s", query)
 
 	db, err := a.connect(database)

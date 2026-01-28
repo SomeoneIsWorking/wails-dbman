@@ -10,6 +10,8 @@ export type PersistentTableTabState = {
   pageSize: number;
   activeTab: "data" | "schema";
   filters: any[];
+  sortColumn?: string;
+  sortDirection?: 'asc' | 'desc';
 };
 
 export type PersistentViewTabState = {
@@ -58,6 +60,8 @@ export function mapToPersistentTable(tab: TableTab): string {
     pageSize: tab.state.pageSize,
     activeTab: tab.state.activeTab,
     filters: tab.state.filters,
+    sortColumn: tab.state.sortColumn,
+    sortDirection: tab.state.sortDirection,
   };
   return JSON.stringify(persistentState);
 }
@@ -122,6 +126,8 @@ export function mapFromPersistentTable(persistentState: any) {
     totalRows: 0,
     activeTab: persistentState.activeTab || "data",
     filters: persistentState.filters || [],
+    sortColumn: persistentState.sortColumn,
+    sortDirection: persistentState.sortDirection,
   };
 }
 

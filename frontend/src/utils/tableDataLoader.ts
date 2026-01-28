@@ -47,6 +47,8 @@ export async function loadTableData(tab: TableTab) {
         page: tab.state.page + 1,
         limit: tab.state.pageSize,
         filters: tab.state.filters || [],
+        sortColumn: tab.state.sortColumn || "",
+        sortDirection: tab.state.sortDirection || "",
       }),
       null,
     ];
