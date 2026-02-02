@@ -22,6 +22,10 @@ export function DeleteTab(arg1) {
   return window['go']['main']['App']['DeleteTab'](arg1);
 }
 
+export function ExecuteQuery(arg1, arg2, arg3) {
+  return window['go']['main']['App']['ExecuteQuery'](arg1, arg2, arg3);
+}
+
 export function GetConnection(arg1) {
   return window['go']['main']['App']['GetConnection'](arg1);
 }
