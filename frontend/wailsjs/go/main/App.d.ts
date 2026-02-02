@@ -15,6 +15,8 @@ export function DeleteConnection(arg1:string):Promise<void>;
 
 export function DeleteTab(arg1:string):Promise<void>;
 
+export function ExecuteQuery(arg1:string,arg2:string,arg3:string):Promise<cache.TableDataResponse>;
+
 export function GetConnection(arg1:string):Promise<cache.Connection>;
 
 export function GetConnections():Promise<Array<cache.ConnectionDetail>>;

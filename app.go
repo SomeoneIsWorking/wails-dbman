@@ -334,6 +334,23 @@ func (a *App) GetViewData(connectionId, database, schema, viewName string, page,
 	return adapter.GetTableData(database, schema, viewName, options)
 }
 
+func (a *App) ExecuteQuery(connectionId, database, query string) (*cache.TableDataResponse, error) {
+	adapter, err := a.createAdapter(connectionId)
+	if err != nil {
+		return nil, err
+	}
+
+	results, err := adapter.ExecuteQuery(query, database)
+	if err != nil {
+		return nil, err
+	}
+
+	return &cache.TableDataResponse{
+		Results: results,
+		Total:   len(results),
+	}, nil
+}
+
 // SaveTab saves a tab to the backend
 func (a *App) SaveTab(tabID, tabType, title, connectionID, database, objectName, data string) error {
 	return cache.SaveTab(tabID, tabType, title, connectionID, database, objectName, data)

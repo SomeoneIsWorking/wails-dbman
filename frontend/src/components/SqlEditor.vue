@@ -75,6 +75,8 @@ import { CheckCircle, Clipboard, Loader, AlertTriangle } from "lucide-vue-next";
 import * as monaco from "monaco-editor";
 import type { ValidationResult } from "~/types/validation";
 import { useThemeStore } from "@/stores/themeStore";
+import { useConnectionsStore } from "@/stores/connectionsStore";
+import { registerEditorMetadata, unregisterEditorMetadata } from "@/utils/sqlCompletion";
 
 interface SqlEditorProps {
   modelValue: string;
@@ -99,10 +101,12 @@ const props = withDefaults(defineProps<SqlEditorProps>(), {
 const emit = defineEmits<{
   "update:modelValue": [value: string];
   validation: [result: ValidationResult];
+  execute: [];
 }>();
 
 // Theme store
 const themeStore = useThemeStore();
+const connectionsStore = useConnectionsStore();
 
 // Reactive state
 const sqlContent = ref(props.modelValue);
@@ -143,6 +147,25 @@ watch(
   }
 );
 
+watch(
+  [() => props.connectionId, () => props.database],
+  ([newConnId, newDb]) => {
+    if (editor && newConnId && newDb) {
+      const model = editor.getModel();
+      if (model) {
+        registerEditorMetadata(model, newConnId, newDb);
+        const connection = connectionsStore.connections.find(
+          (c) => c.id === newConnId
+        );
+        const dbInfo = connection?.databases.find((d) => d.name === newDb);
+        if (dbInfo && !dbInfo.loaded && !dbInfo.loading) {
+          connectionsStore.loadSchemaForDatabase(newConnId, dbInfo);
+        }
+      }
+    }
+  }
+);
+
 // Handle editor content changes
 const handleEditorChange = () => {
   if (editor) {
@@ -177,6 +200,26 @@ onMounted(async () => {
     });
     editor.onDidChangeModelContent(handleEditorChange);
 
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+      emit("execute");
+    });
+
+    if (props.connectionId && props.database) {
+      const model = editor.getModel();
+      if (model) {
+        registerEditorMetadata(model, props.connectionId, props.database);
+        const connection = connectionsStore.connections.find(
+          (c) => c.id === props.connectionId
+        );
+        const dbInfo = connection?.databases.find(
+          (d) => d.name === props.database
+        );
+        if (dbInfo && !dbInfo.loaded && !dbInfo.loading) {
+          connectionsStore.loadSchemaForDatabase(props.connectionId, dbInfo);
+        }
+      }
+    }
+
     if (props.revealLine) {
       scrollToLine(props.revealLine);
     }
@@ -185,6 +228,10 @@ onMounted(async () => {
 
 onUnmounted(() => {
   if (editor) {
+    const model = editor.getModel();
+    if (model) {
+      unregisterEditorMetadata(model);
+    }
     editor.dispose();
     editor = null;
   }

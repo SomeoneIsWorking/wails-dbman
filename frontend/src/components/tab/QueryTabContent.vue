@@ -5,9 +5,11 @@
         class="btn-primary"
         title="Execute Query (⌘Enter)"
         @click="executeQuery"
+        :disabled="tab.state.loading"
       >
-        <PlayIcon class="w-3.5 h-3.5" />
-        Run
+        <Loader2 v-if="tab.state.loading" class="w-3.5 h-3.5 animate-spin" />
+        <PlayIcon v-else class="w-3.5 h-3.5" />
+        {{ tab.state.loading ? "Running..." : "Run" }}
       </button>
     </template>
 
@@ -18,16 +20,16 @@
           height="100%"
           :connection-id="tab.connectionId"
           :database="tab.database"
+          @execute="executeQuery"
         />
       </div>
 
       <!-- Result Area -->
       <Resizable
-        :width="tab.state.resultHeight"
+        v-model:width="tab.state.resultHeight"
         :min="100"
-        :max="600"
+        :max="800"
         :horizontal="false"
-        @update:width="tab.state.resultHeight = $event"
       >
         <div
           class="border-t border-border bg-surface flex flex-col"
@@ -44,28 +46,69 @@
               <div class="h-3 w-px bg-border mx-1"></div>
               <span
                 class="text-[10px] font-bold text-foreground-secondary opacity-60 uppercase tracking-tighter"
-                >0 Rows Affected</span
+                >{{ tab.state.results?.total || 0 }} Rows Affected</span
               >
             </div>
 
             <div class="flex items-center gap-2">
               <span
                 class="text-[10px] font-bold text-foreground-secondary uppercase tracking-tight"
-                >{{ tab.state.content.length }} bytes</span
+                >{{ (tab.state.content || "").length }} bytes</span
               >
             </div>
           </div>
 
-          <OverlayScrollbarsComponent
-            class="flex-1 bg-surface-hover/20 flex flex-col items-center justify-center gap-3 opacity-30 grayscale p-12"
-          >
-            <Database class="w-12 h-12 stroke-1" />
-            <p
-              class="text-[10px] font-bold uppercase tracking-[0.2em] max-w-[200px] text-center leading-relaxed"
-            >
-              Execute your SQL statement to view mapped results
-            </p>
-          </OverlayScrollbarsComponent>
+          <div class="flex-1 min-h-0 bg-surface-hover/20 overflow-hidden">
+            <template v-if="tab.state.loading">
+              <div
+                class="h-full flex flex-col items-center justify-center gap-3 opacity-50 grayscale"
+              >
+                <Loader2 class="w-8 h-8 animate-spin" />
+                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">
+                  Executing Query...
+                </p>
+              </div>
+            </template>
+            <template v-else-if="tab.state.error">
+              <div
+                class="h-full flex flex-col items-center justify-center gap-3 p-6 text-red-500/70 overflow-auto"
+              >
+                <AlertCircle class="w-10 h-10" />
+                <p
+                  class="text-[10px] font-mono whitespace-pre-wrap break-all text-center max-w-lg leading-relaxed"
+                >
+                  {{ tab.state.error }}
+                </p>
+              </div>
+            </template>
+            <template v-else-if="tab.state.results?.results?.length">
+              <DataTable :data="tab.state.results.results" :columns="columns" />
+            </template>
+            <template v-else-if="tab.state.results">
+              <div
+                class="h-full flex flex-col items-center justify-center gap-3 opacity-30 grayscale"
+              >
+                <Database class="w-12 h-12 stroke-1" />
+                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">
+                  Query executed successfully, but returned no results.
+                </p>
+              </div>
+            </template>
+            <template v-else>
+              <OverlayScrollbarsComponent class="h-full">
+                <div
+                  class="h-full flex flex-col items-center justify-center gap-3 opacity-30 grayscale p-12"
+                >
+                  <Database class="w-12 h-12 stroke-1" />
+                  <p
+                    class="text-[10px] font-bold uppercase tracking-[0.2em] max-w-[200px] text-center leading-relaxed"
+                  >
+                    Execute your SQL statement to view mapped results
+                  </p>
+                </div>
+              </OverlayScrollbarsComponent>
+            </template>
+          </div>
         </div>
       </Resizable>
     </div>
@@ -73,18 +116,50 @@
 </template>
 
 <script setup lang="ts">
-import { Play as PlayIcon, Database } from "lucide-vue-next";
+import {
+  Play as PlayIcon,
+  Database,
+  Loader2,
+  AlertCircle,
+} from "lucide-vue-next";
 import SqlEditor from "../SqlEditor.vue";
 import TabView from "../TabView.vue";
 import Resizable from "../Resizable.vue";
+import DataTable from "../DataTable.vue";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
 import { QueryTab } from "@/stores/tabsStore";
+import { ExecuteQuery } from "wailsjs/go/main/App";
+import { computed } from "vue";
 
 interface Props {
   tab: QueryTab;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
-const executeQuery = async () => {};
+const columns = computed(() => {
+  if (!props.tab.state.results?.results?.length) return [];
+  return Object.keys(props.tab.state.results.results[0]);
+});
+
+const executeQuery = async () => {
+  if (!props.tab.state.content.trim()) return;
+
+  props.tab.state.loading = true;
+  props.tab.state.error = null;
+
+  try {
+    const result = await ExecuteQuery(
+      props.tab.connectionId,
+      props.tab.database,
+      props.tab.state.content
+    );
+    props.tab.state.results = result;
+  } catch (e: any) {
+    props.tab.state.error = e.toString();
+    props.tab.state.results = null;
+  } finally {
+    props.tab.state.loading = false;
+  }
+};
 </script>
