@@ -3,14 +3,14 @@
     <Transition
       enter-active-class="transition-all duration-200 ease-out"
       leave-active-class="transition-all duration-150 ease-in"
-      enter-from-class="opacity-0 scale-95"
-      enter-to-class="opacity-100 scale-100"
-      leave-from-class="opacity-100 scale-100"
-      leave-to-class="opacity-0 scale-95"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
     >
       <div
         v-if="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-[1px] p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
         @click.self="$emit('cancel')"
       >
         <div
