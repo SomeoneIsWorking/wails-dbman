@@ -7,10 +7,11 @@
     :class="[
       'flex items-center gap-1.5 border-r border-border/50 cursor-pointer hover:bg-surface-hover/50 transition-all select-none',
       tabsStore.activeTab === tab
-        ? 'bg-surface shadow-[0_-2px_0_inset_rgb(var(--color-primary))] text-foreground'
+        ? 'tab-active bg-surface shadow-[0_-2px_0_inset_rgb(var(--color-primary))] text-foreground'
         : 'bg-surface-hover/30 text-foreground-secondary',
     ]"
     @click="tabsStore.setActiveTab(tab)"
+    @mousedown.middle.prevent="tabsStore.closeTab(tab)"
   >
     <component
       :is="getTabIcon(tab.type)"

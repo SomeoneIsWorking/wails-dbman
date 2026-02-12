@@ -12,20 +12,22 @@
       <header
         class="flex items-center justify-between border-b border-border bg-surface shadow-sm z-50 h-10"
       >
-        <OverlayScrollbarsComponent class="flex-1">
+        <ScrollableContainer ref="scrollContainer">
           <div class="flex items-center h-full">
             <TabBar />
             <button
-              class="p-1 hover:bg-surface-hover rounded"
+              class="p-1 hover:bg-surface-hover rounded mx-1 shrink-0"
               title="New Query"
               @click="createNewQuery"
             >
               <Plus class="w-4 h-4" />
             </button>
           </div>
-        </OverlayScrollbarsComponent>
-        <div class="flex items-center gap-2 px-2">
-          <button class="btn-secondary" @click="commandPalette.open()">
+        </ScrollableContainer>
+        <div
+          class="flex items-center gap-2 px-2 shrink-0 border-l border-border h-full ml-1 bg-surface relative z-20"
+        >
+          <button class="btn-secondary" @click="commandPalette?.open()">
             <Search class="w-4 h-4" />
             Search
           </button>
@@ -62,21 +64,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch, nextTick } from "vue";
 import { Search, Plus, Sun, Moon } from "lucide-vue-next";
 import CommandPalette from "./components/CommandPalette.vue";
 import DatabaseExplorer from "./components/DatabaseExplorer.vue";
 import Resizable from "./components/Resizable.vue";
 import TabBar from "./components/TabBar.vue";
 import TabContent from "./components/TabContent.vue";
+import ScrollableContainer from "./components/ScrollableContainer.vue";
 import ConnectionDialog from "./components/ConnectionDialog.vue";
 import { useTabsStore } from "./stores/tabsStore";
 import { useConnectionsStore } from "./stores/connectionsStore";
 import { useThemeStore } from "./stores/themeStore";
 import { useConnectionForm } from "./composables/useConnectionForm";
-import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
 
-const commandPalette = ref();
+const commandPalette = ref<InstanceType<typeof CommandPalette> | null>(null);
+const scrollContainer = ref<InstanceType<typeof ScrollableContainer> | null>(null);
 
 // Use the UI composables
 const tabsStore = useTabsStore();
@@ -86,6 +89,27 @@ const sidebarWidth = ref(320);
 const connectionsStore = useConnectionsStore();
 const showNewConnectionDialog = ref(false);
 const newConnectionForm = useConnectionForm();
+
+watch(
+  () => tabsStore.tabs,
+  () => {
+    nextTick(() => {
+      scrollContainer.value?.update();
+    });
+  },
+  { deep: true },
+);
+
+watch(
+  () => tabsStore.activeTab,
+  (activeTab) => {
+    if (activeTab) {
+      nextTick(() => {
+        scrollContainer.value?.scrollIntoView(".tab-active");
+      });
+    }
+  },
+);
 
 const createNewQuery = () => {
   tabsStore.addQueryTab(
