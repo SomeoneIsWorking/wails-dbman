@@ -99,6 +99,33 @@
     </template>
     <template v-else-if="menuType === 'database'">
       <ContextMenuItem
+        label="New Query"
+        :icon="FilePlus"
+        @click="
+          tabsStore.addQueryTab(menuData.connId, menuData.db.name);
+          menuShow = false;
+        "
+      />
+      <ContextSubMenu
+        v-if="existingQueryTabs.length > 0"
+        label="Existing Queries"
+        :icon="ExternalLink"
+      >
+        <ContextMenuItem
+          v-for="tab in existingQueryTabs"
+          :key="tab.id"
+          :label="tab.title"
+          :icon="FileText"
+          @click="
+            tabsStore.setActiveTab(tab);
+            menuShow = false;
+          "
+        />
+      </ContextSubMenu>
+
+      <div class="h-px bg-border my-1"></div>
+
+      <ContextMenuItem
         label="Refresh Schema"
         :icon="RefreshCw"
         @click="
@@ -140,6 +167,9 @@ import {
   EyeOff,
   Eye,
   Edit,
+  FilePlus,
+  ExternalLink,
+  FileText,
 } from "lucide-vue-next";
 import { useTabsStore } from "@/stores/tabsStore";
 import {
@@ -149,6 +179,7 @@ import {
 } from "@/stores/connectionsStore";
 import { useConnectionForm } from "@/composables/useConnectionForm";
 
+import ContextSubMenu from "./ContextSubMenu.vue";
 import ConnectionDialog from "./ConnectionDialog.vue";
 import ContextMenu from "./ContextMenu.vue";
 import ContextMenuItem from "./ContextMenuItem.vue";
@@ -215,6 +246,16 @@ const loadConnections = () => {
 };
 
 const tabsStore = useTabsStore();
+
+const existingQueryTabs = computed(() => {
+  if (menuType.value !== "database" || !menuData.value) return [];
+  return tabsStore.tabs.filter(
+    (t) =>
+      t.type === "query" &&
+      t.connectionId === menuData.value.connId &&
+      t.database === menuData.value.db.name,
+  );
+});
 
 const openTable = (
   connectionId: string,
