@@ -188,8 +188,8 @@ import CollapsibleItem from "./CollapsibleItem.vue";
 
 const props = defineProps<{
   database: DatabaseInfo;
-  isExpanded: boolean;
-  groupBySchema: boolean;
+  isExpanded: boolean | undefined;
+  groupBySchema: boolean | undefined;
 }>();
 
 const emit = defineEmits<{
