@@ -9,9 +9,9 @@
         class="flex items-center flex-1 min-w-0"
         @contextmenu.prevent.stop="$emit('contextmenu', $event)"
       >
-        <Server class="w-3 h-3 mr-1" />
+        <DatabaseTypeIcon :type="connection.type" class="w-4 h-4 mr-2" />
         <span class="font-medium flex-1 text-sm truncate"
-          >{{ connection.name }} ({{ connection.type }})</span
+          >{{ connection.name }}</span
         >
         <AlertTriangle
           v-if="connection.hasError"
@@ -26,9 +26,10 @@
 </template>
 
 <script setup lang="ts">
-import { Server, AlertTriangle } from "lucide-vue-next";
+import { AlertTriangle } from "lucide-vue-next";
 import type { ExtendedConnection } from "@/stores/connectionsStore";
 import CollapsibleItem from "./CollapsibleItem.vue";
+import DatabaseTypeIcon from "./DatabaseTypeIcon.vue";
 
 defineProps<{
   connection: ExtendedConnection;
