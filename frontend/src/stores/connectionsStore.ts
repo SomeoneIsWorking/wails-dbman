@@ -30,8 +30,19 @@ export const useConnectionsStore = defineStore("connections", () => {
   const connections = ref<ExtendedConnection[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
+  const connectionsPromise = ref<Promise<void> | null>(null);
 
   const loadConnections = async () => {
+    if (connectionsPromise.value) {
+      return connectionsPromise.value;
+    }
+
+    connectionsPromise.value = _loadConnections();
+    await connectionsPromise.value;
+    connectionsPromise.value = null;
+  };
+
+  const _loadConnections = async () => {
     loading.value = true;
     error.value = null;
 
@@ -72,10 +83,6 @@ export const useConnectionsStore = defineStore("connections", () => {
           }),
         };
       });
-    } catch (err) {
-      console.error("Failed to load connections:", err);
-      error.value =
-        err instanceof Error ? err.message : "Failed to load connections";
     } finally {
       loading.value = false;
     }
@@ -103,11 +110,6 @@ export const useConnectionsStore = defineStore("connections", () => {
         "schema",
       );
       dbInfo.loaded = true;
-    } catch (error) {
-      console.error(
-        `Failed to load schema for database ${dbInfo.name}:`,
-        error,
-      );
     } finally {
       dbInfo.loading = false;
     }
@@ -117,15 +119,11 @@ export const useConnectionsStore = defineStore("connections", () => {
     const conn = connections.value.find((c) => c.id === connectionId);
     if (!conn) return;
 
-    try {
-      await UpdateConnectionSettings(
-        connectionId,
-        conn.hiddenDatabases,
-        conn.showHidden,
-      );
-    } catch (err) {
-      console.error("Failed to sync connection settings to backend:", err);
-    }
+    await UpdateConnectionSettings(
+      connectionId,
+      conn.hiddenDatabases,
+      conn.showHidden,
+    );
   };
 
   const hideDatabase = async (connectionId: string, dbName: string) => {

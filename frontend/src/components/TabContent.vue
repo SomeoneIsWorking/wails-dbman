@@ -1,5 +1,5 @@
 <template>
-  <div class="h-full flex flex-col">
+  <div class="h-full flex flex-col" :key="tabsStore.activeTab?.id">
     <!-- Query Tab Content -->
     <QueryTabContent v-if="tabsStore.activeTab?.type === 'query'" :tab="tabsStore.activeTab" />
 

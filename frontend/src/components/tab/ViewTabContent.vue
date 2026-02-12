@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import {
   Eye as EyeIcon,
   RefreshCw,
@@ -114,6 +114,12 @@ const viewState = computed(() => props.tab.state);
 const totalPages = computed(() =>
   Math.ceil(viewState.value.totalRows / viewState.value.pageSize)
 );
+
+onMounted(() => {
+  if (!viewState.value.data && !viewState.value.loading) {
+    loadViewData(props.tab);
+  }
+});
 
 const changePageSize = () => {
   viewState.value.page = 0;

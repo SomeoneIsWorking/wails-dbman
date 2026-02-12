@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { Settings as SettingsIcon, Save, Edit3, Play } from "lucide-vue-next";
 import StateWrapper from "../StateWrapper.vue";
 import TabView from "../TabView.vue";
@@ -67,6 +67,7 @@ import ProcedureInfoTab from "./ProcedureInfoTab.vue";
 import ProcedureDefinitionTab from "./ProcedureDefinitionTab.vue";
 import ProcedureQueryTab from "./ProcedureQueryTab.vue";
 import type { ProcedureTab } from "@/stores/tabsStore";
+import { loadProcedureData } from "@/utils/procedureDataLoader";
 
 interface Props {
   tab: ProcedureTab;
@@ -76,6 +77,12 @@ const props = defineProps<Props>();
 
 const procedureState = computed(() => props.tab.state);
 const isModifying = ref(false);
+
+onMounted(() => {
+  if (!procedureState.value.info && !procedureState.value.loading) {
+    loadProcedureData(props.tab);
+  }
+});
 
 const executeProcedure = () => {
   alert(
