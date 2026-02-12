@@ -63,6 +63,7 @@
           <button
             v-for="(result, index) in results"
             :key="result.id"
+            :ref="el => { if (el) itemRefs[index] = el }"
             class="w-full text-left px-4 py-3 hover:bg-primary/5 group/result transition-colors flex items-start gap-3"
             :class="{ 'bg-primary/5': index === selectedIndex }"
             @click="selectResult"
@@ -146,6 +147,7 @@ const isOpen = ref(false);
 const search = ref("");
 const selectedIndex = ref(0);
 const results = ref<SearchResult[]>([]);
+const itemRefs = ref<any[]>([]);
 const isLoading = ref(false);
 const searchInput = ref<HTMLInputElement>();
 
@@ -203,14 +205,24 @@ watch(search, (newValue) => {
   performSearch(newValue);
 });
 
+// Scroll selected item into view when navigation occurs
+watch(selectedIndex, async () => {
+  await nextTick();
+  const el = itemRefs.value[selectedIndex.value];
+  if (el) {
+    el.scrollIntoView({ block: "nearest" });
+  }
+});
+
+// Reset selection and clear refs when results change
+watch(results, () => {
+  selectedIndex.value = 0;
+  itemRefs.value = [];
+});
+
 // Keyboard shortcut to open command palette
 const handleKeydown = (e: KeyboardEvent) => {
-  if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-    e.preventDefault();
-    open();
-  }
-  // Also handle Cmd+F to open search (since we're replacing ProcedureSearchModal)
-  if ((e.metaKey || e.ctrlKey) && e.key === "f") {
+  if ((e.metaKey || e.ctrlKey) && ["k", "f", "p"].includes(e.key) ) {
     e.preventDefault();
     open();
   }
