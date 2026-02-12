@@ -91,11 +91,12 @@ func (a *MSSQLAdapter) GetSchema(database string) (*cache.SchemaInfo, error) {
 				SELECT 1 FROM sys.foreign_key_columns fkc
 				WHERE fkc.parent_object_id = c.object_id AND fkc.parent_column_id = c.column_id
 			) THEN 1 ELSE 0 END as is_foreign,
-			c.default_object_id
+			dc.definition
 		FROM sys.columns c
 		JOIN sys.types ty ON c.user_type_id = ty.user_type_id
 		JOIN sys.tables t ON c.object_id = t.object_id
 		JOIN sys.schemas s ON t.schema_id = s.schema_id
+		LEFT JOIN sys.default_constraints dc ON c.default_object_id = dc.object_id
 		WHERE t.type = 'U'
 		ORDER BY s.name, t.name, c.column_id
 	`
@@ -111,8 +112,8 @@ func (a *MSSQLAdapter) GetSchema(database string) (*cache.SchemaInfo, error) {
 		var col cache.ColumnInfo
 		var maxLength, precision, scale *int
 		var isPrimary, isUnique, isForeign bool
-		var defaultObjID int
-		err := allColumnsRows.Scan(&schemaName, &tableName, &col.Name, &col.Type, &col.Nullable, &maxLength, &precision, &scale, &isPrimary, &isUnique, &isForeign, &defaultObjID)
+		var defaultValue *string
+		err := allColumnsRows.Scan(&schemaName, &tableName, &col.Name, &col.Type, &col.Nullable, &maxLength, &precision, &scale, &isPrimary, &isUnique, &isForeign, &defaultValue)
 		if err != nil {
 			continue
 		}
@@ -122,12 +123,7 @@ func (a *MSSQLAdapter) GetSchema(database string) (*cache.SchemaInfo, error) {
 		col.Primary = isPrimary
 		col.Unique = isUnique
 		col.Foreign = isForeign
-		if defaultObjID != 0 {
-			// Get default value
-			var defaultValue string
-			db.Raw("SELECT definition FROM sys.default_constraints WHERE object_id = ?", defaultObjID).Scan(&defaultValue)
-			col.DefaultValue = &defaultValue
-		}
+		col.DefaultValue = defaultValue
 		key := schemaName + "." + tableName
 		columnsMap[key] = append(columnsMap[key], col)
 	}
