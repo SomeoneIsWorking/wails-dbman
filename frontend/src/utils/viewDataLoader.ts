@@ -10,6 +10,8 @@ export async function loadViewData(tab: ViewTab) {
     const connectionsStore = useConnectionsStore();
     const [databaseName, schemaName, viewName] = tab.objectName.split(".");
 
+    await connectionsStore.loadConnections();
+    
     // Find connection and view info from store
     const connection = connectionsStore.connections.find(
       (c) => c.id === tab.connectionId

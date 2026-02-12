@@ -11,10 +11,13 @@ export async function loadTableData(tab: TableTab) {
     const connectionsStore = useConnectionsStore();
     const [databaseName, schemaName, tableName] = tab.objectName.split(".");
 
+    await connectionsStore.loadConnections();
+
     // Find connection and table info from store instead of fetching
     const connection = connectionsStore.connections.find(
       (c) => c.id === tab.connectionId
     );
+    
     const databaseInfo = connection?.databases.find(
       (d) => d.name === databaseName
     );
@@ -68,7 +71,6 @@ export async function loadTableData(tab: TableTab) {
     const [response, totalRows] = await Promise.all(promises);
 
     response.results = response.results || [];
-    console.log("Table data response:", response);
 
     tab.state.data = response;
     tab.state.schema = tableInfo as any;

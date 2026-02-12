@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import {
   Table as TableIcon,
   RefreshCw,
@@ -96,6 +96,12 @@ const tableState = computed(() => props.tab.state);
 const totalPages = computed(() =>
   Math.ceil(tableState.value.totalRows / tableState.value.pageSize)
 );
+
+onMounted(() => {
+  if (!tableState.value.data && !tableState.value.loading) {
+    loadTableData(props.tab);
+  }
+});
 
 const refreshData = () => {
   loadTableData(props.tab);
