@@ -32,7 +32,7 @@ import CollapsibleItem from "./CollapsibleItem.vue";
 
 defineProps<{
   connection: ExtendedConnection;
-  isExpanded: boolean;
+  isExpanded: boolean | undefined;
 }>();
 
 defineEmits<{
