@@ -117,12 +117,22 @@
             </template>
             <template v-else-if="tab.state.results">
               <div
-                class="h-full flex flex-col items-center justify-center gap-3 opacity-30 grayscale"
+                class="h-full flex flex-col items-center justify-center gap-4 opacity-30 grayscale"
               >
-                <Database class="w-12 h-12 stroke-1" />
-                <p class="text-[10px] font-bold uppercase tracking-[0.2em]">
-                  Query executed successfully, but returned no results.
-                </p>
+                <div class="relative">
+                  <Database class="w-12 h-12 stroke-1" />
+                  <div class="absolute -bottom-1 -right-1 bg-surface rounded-full p-1">
+                    <Search class="w-5 h-5 stroke-[3]" />
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-1">
+                  <p class="text-[10px] font-bold uppercase tracking-[0.2em]">
+                    Query executed successfully
+                  </p>
+                  <p class="text-[10px] font-medium opacity-60 uppercase tracking-tighter">
+                    But returned no results
+                  </p>
+                </div>
               </div>
             </template>
             <template v-else>
@@ -152,6 +162,7 @@ import {
   Database,
   Loader2,
   AlertCircle,
+  Search,
 } from "lucide-vue-next";
 import SqlEditor from "../SqlEditor.vue";
 import TabView from "../TabView.vue";
