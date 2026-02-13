@@ -60,7 +60,7 @@
         v-model:width="tab.state.resultHeight"
         :min="100"
         :max="800"
-        :horizontal="false"
+        position="top"
       >
         <div
           class="border-t border-border bg-surface flex flex-col"
