@@ -12,6 +12,7 @@
     ]"
     @click="tabsStore.setActiveTab(tab)"
     @mousedown.middle.prevent="tabsStore.closeTab(tab)"
+    @contextmenu.prevent="handleContextMenu($event, tab)"
   >
     <component
       :is="getTabIcon(tab.type)"
@@ -26,13 +27,107 @@
       <X class="w-2.5 h-2.5" />
     </button>
   </div>
+
+  <ContextMenu
+    :show="contextMenu.show"
+    :x="contextMenu.x"
+    :y="contextMenu.y"
+    @close="contextMenu.show = false"
+  >
+    <ContextMenuItem
+      label="Close Tab"
+      :icon="X"
+      @click="closeTab"
+    />
+    <ContextMenuItem
+      label="Close Other Tabs"
+      :icon="Ban"
+      @click="closeOthers"
+    />
+    <ContextMenuItem
+      label="Close Tabs to Left"
+      :icon="ArrowLeft"
+      @click="closeLeft"
+    />
+    <ContextMenuItem
+      label="Close Tabs to Right"
+      :icon="ArrowRight"
+      @click="closeRight"
+    />
+    <div class="h-px bg-border my-1"></div>
+    <ContextMenuItem
+      label="Close All Tabs"
+      :icon="XCircle"
+      @click="closeAll"
+    />
+  </ContextMenu>
 </template>
 
 <script setup lang="ts">
-import { useTabsStore } from "@/stores/tabsStore";
-import { FileText, Table, Settings, Eye, X } from "lucide-vue-next";
+import { reactive } from "vue";
+import { useTabsStore, type Tab } from "@/stores/tabsStore";
+import { 
+  FileText, 
+  Table, 
+  Settings, 
+  Eye, 
+  X, 
+  XCircle, 
+  Ban, 
+  ArrowLeft, 
+  ArrowRight 
+} from "lucide-vue-next";
+import ContextMenu from "./ContextMenu.vue";
+import ContextMenuItem from "./ContextMenuItem.vue";
 
 const tabsStore = useTabsStore();
+
+const contextMenu = reactive({
+  show: false,
+  x: 0,
+  y: 0,
+  tab: null as Tab | null,
+});
+
+const handleContextMenu = (e: MouseEvent, tab: Tab) => {
+  contextMenu.x = e.clientX;
+  contextMenu.y = e.clientY;
+  contextMenu.tab = tab;
+  contextMenu.show = true;
+};
+
+const closeTab = () => {
+  if (contextMenu.tab) {
+    tabsStore.closeTab(contextMenu.tab);
+  }
+  contextMenu.show = false;
+};
+
+const closeOthers = () => {
+  if (contextMenu.tab) {
+    tabsStore.closeOtherTabs(contextMenu.tab);
+  }
+  contextMenu.show = false;
+};
+
+const closeLeft = () => {
+  if (contextMenu.tab) {
+    tabsStore.closeTabsToLeft(contextMenu.tab);
+  }
+  contextMenu.show = false;
+};
+
+const closeRight = () => {
+  if (contextMenu.tab) {
+    tabsStore.closeTabsToRight(contextMenu.tab);
+  }
+  contextMenu.show = false;
+};
+
+const closeAll = () => {
+  tabsStore.closeAllTabs();
+  contextMenu.show = false;
+};
 
 const getTabIcon = (type: string) => {
   switch (type) {
