@@ -298,10 +298,50 @@ export const useTabsStore = defineStore("tabs", () => {
       if (activeTab.value === tab) {
         if (tabs.value.length > 0) {
           activeTab.value = tabs.value[Math.min(index, tabs.value.length - 1)];
+        } else {
+          activeTab.value = null;
         }
       }
       // Delete tab from backend
       deleteTabFromBackend(tab.id);
+    }
+  };
+
+  const closeAllTabs = () => {
+    const tabsToClose = [...tabs.value];
+    tabs.value = [];
+    activeTab.value = null;
+    tabsToClose.forEach(t => deleteTabFromBackend(t.id));
+  };
+
+  const closeOtherTabs = (currentTab: Tab) => {
+    const tabsToClose = tabs.value.filter(t => t.id !== currentTab.id);
+    tabs.value = [currentTab];
+    activeTab.value = currentTab;
+    tabsToClose.forEach(t => deleteTabFromBackend(t.id));
+  };
+
+  const closeTabsToLeft = (currentTab: Tab) => {
+    const index = tabs.value.findIndex(t => t.id === currentTab.id);
+    if (index > 0) {
+      const tabsToClose = tabs.value.slice(0, index);
+      tabs.value = tabs.value.slice(index);
+      if (activeTab.value && tabsToClose.some(t => t.id === activeTab.value?.id)) {
+        activeTab.value = currentTab;
+      }
+      tabsToClose.forEach(t => deleteTabFromBackend(t.id));
+    }
+  };
+
+  const closeTabsToRight = (currentTab: Tab) => {
+    const index = tabs.value.findIndex(t => t.id === currentTab.id);
+    if (index > -1 && index < tabs.value.length - 1) {
+      const tabsToClose = tabs.value.slice(index + 1);
+      tabs.value = tabs.value.slice(0, index + 1);
+      if (activeTab.value && tabsToClose.some(t => t.id === activeTab.value?.id)) {
+        activeTab.value = currentTab;
+      }
+      tabsToClose.forEach(t => deleteTabFromBackend(t.id));
     }
   };
 
@@ -329,6 +369,10 @@ export const useTabsStore = defineStore("tabs", () => {
     addProcedureTab,
     addQueryTab,
     closeTab,
+    closeAllTabs,
+    closeOtherTabs,
+    closeTabsToLeft,
+    closeTabsToRight,
     setActiveTab,
   };
 });
