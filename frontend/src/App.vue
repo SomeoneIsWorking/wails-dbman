@@ -2,7 +2,7 @@
   <div class="h-screen bg-background text-foreground flex">
     <!-- Main Layout -->
     <!-- Left Sidebar - Database Explorer -->
-    <Resizable horizontal v-model:width="sidebarWidth" :min="270" :max="600">
+    <Resizable position="right" v-model:width="sidebarWidth" :min="270" :max="600">
       <aside class="border-r border-border flex flex-col min-w-0 min-h-0">
         <DatabaseExplorer @new-connection="openNewConnection" />
       </aside>

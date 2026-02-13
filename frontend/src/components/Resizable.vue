@@ -1,9 +1,16 @@
 <template>
   <div :class="containerClass" ref="containerRef">
-    <div ref="paneRef" :style="paneStyle" class="grid">
+    <div
+      v-if="isReverse"
+      :class="resizerClass"
+      @mousedown="onMouseDown"
+      @touchstart.prevent="onTouchStart"
+    ></div>
+    <div ref="paneRef" :style="paneStyle" class="grid overflow-hidden">
       <slot />
     </div>
     <div
+      v-if="!isReverse"
       :class="resizerClass"
       @mousedown="onMouseDown"
       @touchstart.prevent="onTouchStart"
@@ -18,7 +25,11 @@ const props = defineProps({
   width: { type: Number, default: 320 },
   min: { type: Number, default: 200 },
   max: { type: Number, default: 600 },
-  horizontal: { type: Boolean, default: false },
+  position: { 
+    type: String, 
+    default: "bottom",
+    validator: (v: string) => ["left", "right", "top", "bottom"].includes(v)
+  },
 });
 
 const emit = defineEmits<{
@@ -32,9 +43,12 @@ watch(localWidth, (v) => emit("update:width", v));
 const containerRef = ref<HTMLElement | null>(null);
 let isResizing = false;
 
+const isHorizontal = computed(() => props.position === "left" || props.position === "right");
+const isReverse = computed(() => props.position === "left" || props.position === "top");
+
 const paneStyle = computed(() => ({
-  width: props.horizontal ? `${localWidth.value}px` : undefined,
-  height: props.horizontal ? undefined : `${localWidth.value}px`,
+  width: isHorizontal.value ? `${localWidth.value}px` : undefined,
+  height: isHorizontal.value ? undefined : `${localWidth.value}px`,
 }));
 
 function clamp(v: number, a: number, b: number) {
@@ -44,10 +58,19 @@ function clamp(v: number, a: number, b: number) {
 const onMouseMove = (e: MouseEvent) => {
   if (!isResizing || !containerRef.value) return;
   const rect = containerRef.value.getBoundingClientRect();
-  const newSize = props.horizontal
-    ? clamp(e.clientX - rect.left, props.min, props.max)
-    : clamp(e.clientY - rect.top, props.min, props.max);
-  localWidth.value = newSize;
+  
+  let newSize: number;
+  if (isHorizontal.value) {
+    newSize = props.position === "left" 
+      ? rect.right - e.clientX 
+      : e.clientX - rect.left;
+  } else {
+    newSize = props.position === "top" 
+      ? rect.bottom - e.clientY 
+      : e.clientY - rect.top;
+  }
+  
+  localWidth.value = clamp(newSize, props.min, props.max);
 };
 
 const onMouseUp = () => {
@@ -71,10 +94,19 @@ const onTouchMove = (e: TouchEvent) => {
   if (!isResizing || !containerRef.value) return;
   const t = e.touches[0];
   const rect = containerRef.value.getBoundingClientRect();
-  const newSize = props.horizontal
-    ? clamp(t.clientX - rect.left, props.min, props.max)
-    : clamp(t.clientY - rect.top, props.min, props.max);
-  localWidth.value = newSize;
+  
+  let newSize: number;
+  if (isHorizontal.value) {
+    newSize = props.position === "left" 
+      ? rect.right - t.clientX 
+      : t.clientX - rect.left;
+  } else {
+    newSize = props.position === "top" 
+      ? rect.bottom - t.clientY 
+      : t.clientY - rect.top;
+  }
+  
+  localWidth.value = clamp(newSize, props.min, props.max);
 };
 
 const onTouchEnd = () => {
@@ -92,11 +124,11 @@ function removeListeners() {
 onBeforeUnmount(removeListeners);
 
 const containerClass = computed(() =>
-  props.horizontal ? "flex items-stretch" : "flex flex-col"
+  isHorizontal.value ? "flex items-stretch" : "flex flex-col"
 );
 
 const resizerClass = computed(() =>
-  props.horizontal
+  isHorizontal.value
     ? "w-1 bg-border/50 cursor-col-resize hover:bg-primary/50 transition-colors"
     : "h-1 bg-border/50 cursor-row-resize hover:bg-primary/50 transition-colors"
 );
