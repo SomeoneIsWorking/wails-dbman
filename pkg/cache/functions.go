@@ -434,15 +434,24 @@ func CacheSchema(connectionId, database string, schema SchemaInfo) error {
 
 // Get cached schema
 func GetCachedSchema(connectionId, database string) (*SchemaResponse, error) {
-	var cachedSchema CachedSchema
-	err := DB.Where("connection_id = ? AND database = ?", connectionId, database).Preload("Tables.Columns").Preload("Tables.PrimaryKeys").Preload("Tables.ForeignKeys").Preload("Views.Columns").Preload("Procedures.Parameters").Preload("Procedures.ResultSets.Columns").First(&cachedSchema).Error
+	var cachedSchemas []CachedSchema
+	err := DB.Where("connection_id = ? AND database = ?", connectionId, database).
+		Preload("Tables.Columns").
+		Preload("Tables.PrimaryKeys").
+		Preload("Tables.ForeignKeys").
+		Preload("Views.Columns").
+		Preload("Procedures.Parameters").
+		Preload("Procedures.ResultSets.Columns").
+		Limit(1).
+		Find(&cachedSchemas).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
 		log.Printf("Error reading cached schema: %v", err)
 		return nil, err
 	}
+	if len(cachedSchemas) == 0 {
+		return nil, nil
+	}
+	cachedSchema := cachedSchemas[0]
 	// Build tables
 	tables := make([]TableResponse, len(cachedSchema.Tables))
 	for i, table := range cachedSchema.Tables {
@@ -566,19 +575,27 @@ func GetCachedSchema(connectionId, database string) (*SchemaResponse, error) {
 // Store procedure definition
 func StoreProcedureDefinition(connectionId, database, schema, procedureName string, definition *string, parameters []ProcedureParameterData, resultSets []ResultSetData) (string, error) {
 	fileName := database + "." + schema + "." + procedureName + ".sql"
-	var cachedSchema CachedSchema
-	err := DB.Where("connection_id = ? AND database = ?", connectionId, database).First(&cachedSchema).Error
+	var cachedSchemas []CachedSchema
+	err := DB.Where("connection_id = ? AND database = ?", connectionId, database).Limit(1).Find(&cachedSchemas).Error
 	if err != nil {
-		log.Printf("No cached schema found: %v", err)
+		log.Printf("Error finding cached schema: %v", err)
 		return "", err
 	}
-	var cachedProc CachedProcedure
-	err = DB.Where("schema_id = ? AND schema = ? AND procedure_name = ?", cachedSchema.ID, schema, procedureName).First(&cachedProc).Error
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if len(cachedSchemas) == 0 {
+		log.Printf("No cached schema found")
+		return "", errors.New("no cached schema found")
+	}
+	cachedSchema := cachedSchemas[0]
+
+	var procs []CachedProcedure
+	err = DB.Where("schema_id = ? AND schema = ? AND procedure_name = ?", cachedSchema.ID, schema, procedureName).Limit(1).Find(&procs).Error
+	if err != nil {
 		log.Printf("Error finding cached procedure: %v", err)
 		return "", err
 	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+
+	var cachedProc CachedProcedure
+	if len(procs) == 0 {
 		cachedProc = CachedProcedure{
 			ID:               uuid.New().String(),
 			SchemaID:         cachedSchema.ID,
@@ -596,6 +613,7 @@ func StoreProcedureDefinition(connectionId, database, schema, procedureName stri
 			return "", err
 		}
 	} else {
+		cachedProc = procs[0]
 		cachedProc.Definition = definition
 		if parameters != nil {
 			cachedProc.ParametersCached = true
@@ -661,15 +679,16 @@ func StoreProcedureDefinition(connectionId, database, schema, procedureName stri
 
 // Get all cached procedures
 func GetAllCachedProcedures(connectionId, database string) (map[string]ProcedureCacheInfo, error) {
-	var cachedSchema CachedSchema
-	err := DB.Where("connection_id = ? AND database = ?", connectionId, database).First(&cachedSchema).Error
+	var cachedSchemas []CachedSchema
+	err := DB.Where("connection_id = ? AND database = ?", connectionId, database).Limit(1).Find(&cachedSchemas).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return make(map[string]ProcedureCacheInfo), nil
-		}
 		log.Printf("Error finding cached schema: %v", err)
 		return nil, err
 	}
+	if len(cachedSchemas) == 0 {
+		return make(map[string]ProcedureCacheInfo), nil
+	}
+	cachedSchema := cachedSchemas[0]
 	var procs []CachedProcedure
 	err = DB.Where("schema_id = ?", cachedSchema.ID).Find(&procs).Error
 	if err != nil {
@@ -692,24 +711,31 @@ func GetAllCachedProcedures(connectionId, database string) (map[string]Procedure
 
 // Get cached procedure
 func GetCachedProcedure(connectionId, database, schema, procedureName string) (*CachedProcedureDetails, error) {
-	var cachedSchema CachedSchema
-	err := DB.Where("connection_id = ? AND database = ?", connectionId, database).First(&cachedSchema).Error
+	var cachedSchemas []CachedSchema
+	err := DB.Where("connection_id = ? AND database = ?", connectionId, database).Limit(1).Find(&cachedSchemas).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
 		log.Printf("Error finding cached schema: %v", err)
 		return nil, err
 	}
-	var proc CachedProcedure
-	err = DB.Where("schema_id = ? AND schema = ? AND procedure_name = ?", cachedSchema.ID, schema, procedureName).Preload("Parameters").Preload("ResultSets.Columns").First(&proc).Error
+	if len(cachedSchemas) == 0 {
+		return nil, nil
+	}
+	cachedSchema := cachedSchemas[0]
+
+	var procs []CachedProcedure
+	err = DB.Where("schema_id = ? AND schema = ? AND procedure_name = ?", cachedSchema.ID, schema, procedureName).
+		Preload("Parameters").
+		Preload("ResultSets.Columns").
+		Limit(1).
+		Find(&procs).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
 		log.Printf("Error reading cached procedure: %v", err)
 		return nil, err
 	}
+	if len(procs) == 0 {
+		return nil, nil
+	}
+	proc := procs[0]
 	return &CachedProcedureDetails{
 		Definition:       proc.Definition,
 		Parameters:       proc.Parameters,
@@ -724,20 +750,26 @@ func GetCachedProcedure(connectionId, database, schema, procedureName string) (*
 
 // Mark procedure as failed
 func MarkProcedureAsFailed(connectionId, database, schema, procedureName, errorMessage string) error {
-	var cachedSchema CachedSchema
-	err := DB.Where("connection_id = ? AND database = ?", connectionId, database).First(&cachedSchema).Error
+	var cachedSchemas []CachedSchema
+	err := DB.Where("connection_id = ? AND database = ?", connectionId, database).Limit(1).Find(&cachedSchemas).Error
 	if err != nil {
-		log.Printf("No cached schema found: %v", err)
+		log.Printf("Error finding cached schema: %v", err)
 		return err
 	}
-	var proc CachedProcedure
-	err = DB.Where("schema_id = ? AND schema = ? AND procedure_name = ?", cachedSchema.ID, schema, procedureName).First(&proc).Error
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if len(cachedSchemas) == 0 {
+		return errors.New("no cached schema found")
+	}
+	cachedSchema := cachedSchemas[0]
+
+	var procs []CachedProcedure
+	err = DB.Where("schema_id = ? AND schema = ? AND procedure_name = ?", cachedSchema.ID, schema, procedureName).Limit(1).Find(&procs).Error
+	if err != nil {
 		log.Printf("Error finding cached procedure: %v", err)
 		return err
 	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		proc = CachedProcedure{
+
+	if len(procs) == 0 {
+		proc := CachedProcedure{
 			ID:            uuid.New().String(),
 			SchemaID:      cachedSchema.ID,
 			Schema:        schema,
@@ -749,6 +781,7 @@ func MarkProcedureAsFailed(connectionId, database, schema, procedureName, errorM
 		}
 		err = DB.Create(&proc).Error
 	} else {
+		proc := procs[0]
 		proc.FailedToLoad = true
 		proc.FailureReason = &errorMessage
 		proc.UpdatedAt = time.Now().Format(time.RFC3339)

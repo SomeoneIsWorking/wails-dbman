@@ -19,7 +19,7 @@ export function ExecuteQuery(arg1:string,arg2:string,arg3:string):Promise<cache.
 
 export function GetConnection(arg1:string):Promise<cache.Connection>;
 
-export function GetConnections():Promise<Array<cache.ConnectionDetail>>;
+export function GetConnections(arg1:boolean):Promise<Array<cache.ConnectionDetail>>;
 
 export function GetDatabases(arg1:string,arg2:boolean):Promise<Array<string>>;
 
