@@ -44,7 +44,7 @@ func (a *App) createAdapter(connectionId string) (adapters.BaseAdapter, error) {
 	return adapter, nil
 }
 
-func (a *App) GetConnections() ([]cache.ConnectionDetail, error) {
+func (a *App) GetConnections(invalidate bool) ([]cache.ConnectionDetail, error) {
 	conns, err := cache.GetConnections()
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (a *App) GetConnections() ([]cache.ConnectionDetail, error) {
 		}
 
 		// Get all database names for this connection
-		dbNames, err := a.GetDatabases(conn.ID, false)
+		dbNames, err := a.GetDatabases(conn.ID, invalidate)
 		if err != nil {
 			// Mark connection as having an error in response, but continue rendering other connections
 			errMsg := err.Error()
@@ -79,9 +79,13 @@ func (a *App) GetConnections() ([]cache.ConnectionDetail, error) {
 
 		detail.Databases = make([]cache.DatabaseDetail, len(dbNames))
 		for j, name := range dbNames {
+			// Check if schema is cached to avoid unnecessary loading states in frontend
+			schema, _ := cache.GetCachedSchema(conn.ID, name)
+
 			dbDetail := cache.DatabaseDetail{
 				Name:   name,
-				Loaded: false,
+				Loaded: schema != nil,
+				Schema: schema,
 			}
 
 			detail.Databases[j] = dbDetail

@@ -37,7 +37,7 @@ const connections = ref([])
 const expanded = ref({})
 
 onMounted(async () => {
-  connections.value = await GetConnections()
+  connections.value = await GetConnections(false)
 })
 
 const toggleExpanded = (id) => {

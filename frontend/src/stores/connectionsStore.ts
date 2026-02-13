@@ -32,25 +32,31 @@ export const useConnectionsStore = defineStore("connections", () => {
   const error = ref<string | null>(null);
   const connectionsPromise = ref<Promise<void> | null>(null);
 
-  const loadConnections = async () => {
-    if (connectionsPromise.value) {
+  const loadConnections = async (force: boolean = false) => {
+    // If not forcing and we already have a promise (pending or resolved), use it
+    if (!force && connectionsPromise.value) {
       return connectionsPromise.value;
     }
 
-    connectionsPromise.value = _loadConnections();
-    await connectionsPromise.value;
-    connectionsPromise.value = null;
+    connectionsPromise.value = _loadConnections(force);
+    try {
+      await connectionsPromise.value;
+    } catch (e) {
+      connectionsPromise.value = null;
+      throw e;
+    }
   };
 
-  const _loadConnections = async () => {
+  const _loadConnections = async (invalidate: boolean = false) => {
     loading.value = true;
     error.value = null;
 
     try {
-      const enrichedConns = await GetConnections();
+      const enrichedConns = await GetConnections(invalidate);
 
-      // Transform connections to include database structure
+      // Transform connections, preserving existing schema state if already loaded in frontend
       connections.value = enrichedConns.map((conn) => {
+        const existingConn = connections.value.find((c) => c.id === conn.id);
         let hiddenForConn: string[] = [];
         try {
           hiddenForConn = JSON.parse(conn.hiddenDatabases || "[]");
@@ -61,6 +67,17 @@ export const useConnectionsStore = defineStore("connections", () => {
         return {
           ...conn,
           databases: conn.databases.map((db) => {
+            const existingDb = existingConn?.databases.find((d) => d.name === db.name);
+            
+            // If the frontend already has this database loaded and it's expanded, 
+            // keep that schema instead of resetting back to empty/loading state.
+            if (existingDb?.loaded) {
+              return {
+                ...existingDb,
+                isHidden: hiddenForConn.includes(db.name),
+              };
+            }
+
             const tablesBySchema = db.schema
               ? groupBy(db.schema.tables, "schema")
               : {};

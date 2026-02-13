@@ -2,7 +2,7 @@ const { GetConnections, CreateConnection } = window.runtime;
 
 async function loadConnections() {
     try {
-        const connections = await GetConnections();
+        const connections = await GetConnections(false);
         const container = document.getElementById('connections');
         container.innerHTML = '<h2>Connections</h2>' + connections.map(conn => `
             <div class="connection">

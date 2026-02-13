@@ -30,8 +30,8 @@ export function GetConnection(arg1) {
   return window['go']['main']['App']['GetConnection'](arg1);
 }
 
-export function GetConnections() {
-  return window['go']['main']['App']['GetConnections']();
+export function GetConnections(arg1) {
+  return window['go']['main']['App']['GetConnections'](arg1);
 }
 
 export function GetDatabases(arg1, arg2) {

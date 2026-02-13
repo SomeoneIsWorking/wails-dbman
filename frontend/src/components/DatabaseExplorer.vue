@@ -15,10 +15,14 @@
     </button>
     <button
       @click="loadConnections"
-      class="p-1 hover:bg-surface rounded"
+      class="p-1 hover:bg-surface rounded disabled:opacity-50"
       title="Refresh"
+      :disabled="connectionsStore.loading"
     >
-      <RefreshCw class="w-4 h-4" />
+      <RefreshCw
+        class="w-4 h-4"
+        :class="{ 'animate-spin': connectionsStore.loading }"
+      />
     </button>
     <button
       @click="groupBySchema = !groupBySchema"
@@ -242,7 +246,7 @@ onMounted(async () => {
 const emit = defineEmits(["new-connection"]);
 
 const loadConnections = () => {
-  connectionsStore.loadConnections();
+  connectionsStore.loadConnections(true);
 };
 
 const tabsStore = useTabsStore();
@@ -296,7 +300,7 @@ const toggleDatabase = async (connectionId: string, db: any) => {
 
 const handleSaveConnection = async () => {
   // Refresh connections to show updated data
-  await connectionsStore.loadConnections();
+  await connectionsStore.loadConnections(true);
 
   showEditDialog.value = false;
   editingConnection.value = null;
