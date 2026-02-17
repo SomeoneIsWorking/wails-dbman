@@ -48,7 +48,8 @@ func (a *PostgresAdapter) GetSchema(database string) (*cache.SchemaInfo, error) 
 	return &cache.SchemaInfo{}, nil
 }
 
-func (a *PostgresAdapter) ExecuteQuery(query string, database string) ([]map[string]interface{}, error) {
+func (a *PostgresAdapter) ExecuteQuery(query string, database string) (*cache.ExecuteQueryResponse, error) {
+	startTime := time.Now()
 	db, err := a.connect(database)
 	if err != nil {
 		return nil, err
@@ -58,28 +59,51 @@ func (a *PostgresAdapter) ExecuteQuery(query string, database string) ([]map[str
 		return nil, err
 	}
 	defer rows.Close()
-	columns, err := rows.Columns()
-	if err != nil {
-		return nil, err
+
+	response := &cache.ExecuteQueryResponse{
+		ResultSets: []cache.ResultSet{},
 	}
-	var results []map[string]interface{}
-	for rows.Next() {
-		values := make([]interface{}, len(columns))
-		valuePtrs := make([]interface{}, len(columns))
-		for i := range values {
-			valuePtrs[i] = &values[i]
-		}
-		err = rows.Scan(valuePtrs...)
+
+	for {
+		columns, err := rows.Columns()
 		if err != nil {
 			return nil, err
 		}
-		row := make(map[string]interface{})
-		for i, col := range columns {
-			row[col] = values[i]
+
+		var data []map[string]interface{}
+		rowCount := 0
+		for rows.Next() {
+			if rowCount < MaxQueryRows {
+				values := make([]interface{}, len(columns))
+				valuePtrs := make([]interface{}, len(columns))
+				for i := range values {
+					valuePtrs[i] = &values[i]
+				}
+				if err := rows.Scan(valuePtrs...); err != nil {
+					return nil, err
+				}
+				row := make(map[string]interface{})
+				for i, col := range columns {
+					row[col] = values[i]
+				}
+				data = append(data, row)
+			}
+			rowCount++
 		}
-		results = append(results, row)
+
+		response.ResultSets = append(response.ResultSets, cache.ResultSet{
+			Data:         data,
+			Columns:      columns,
+			RowsAffected: int64(rowCount),
+		})
+
+		if !rows.NextResultSet() {
+			break
+		}
 	}
-	return results, nil
+
+	response.ElapsedMs = time.Since(startTime).Milliseconds()
+	return response, nil
 }
 
 func (a *PostgresAdapter) buildWhereClause(filters []cache.Filter) (string, []interface{}) {
