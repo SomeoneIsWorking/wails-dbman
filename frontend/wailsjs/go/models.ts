@@ -257,6 +257,15 @@ export namespace cache {
 	    hasError: boolean;
 	}
 	
+	export interface ResultSet {
+	    data: any[];
+	    columns: string[];
+	    rowsAffected: number;
+	}
+	export interface ExecuteQueryResponse {
+	    resultSets: ResultSet[];
+	    elapsedMs: number;
+	}
 	export interface Filter {
 	    column: string;
 	    operator: string;
@@ -273,6 +282,7 @@ export namespace cache {
 	    precision?: number;
 	    scale?: number;
 	}
+	
 	
 	
 	

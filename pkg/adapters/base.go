@@ -5,6 +5,8 @@ import (
 	"wails-dbman/pkg/cache"
 )
 
+const MaxQueryRows = 100
+
 type ConnectionConfig struct {
 	Type         string `json:"type"`
 	ConnectionID string `json:"connectionId"`
@@ -18,7 +20,7 @@ type ConnectionConfig struct {
 type BaseAdapter interface {
 	ListDatabases() ([]string, error)
 	GetSchema(database string) (*cache.SchemaInfo, error)
-	ExecuteQuery(query string, database string) ([]map[string]interface{}, error)
+	ExecuteQuery(query string, database string) (*cache.ExecuteQueryResponse, error)
 	GetTableData(database, schema, tableName string, options map[string]interface{}) (*cache.TableDataResponse, error)
 	GetTableDataCount(database, schema, tableName string, options map[string]interface{}) (int, error)
 	GetProcedureDetails(database, schema, name string) (*cache.StoredProcedureInfo, error)

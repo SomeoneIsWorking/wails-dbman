@@ -84,6 +84,17 @@ type TableDataResponse struct {
 	Total   int                      `json:"total"`
 }
 
+type ExecuteQueryResponse struct {
+	ResultSets []ResultSet `json:"resultSets"`
+	ElapsedMs  int64       `json:"elapsedMs"`
+}
+
+type ResultSet struct {
+	Data         []map[string]interface{} `json:"data"`
+	Columns      []string                 `json:"columns"`
+	RowsAffected int64                    `json:"rowsAffected"`
+}
+
 type Filter struct {
 	Column   string      `json:"column"`
 	Operator string      `json:"operator"`

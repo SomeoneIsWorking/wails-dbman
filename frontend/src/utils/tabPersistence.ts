@@ -112,6 +112,7 @@ export function mapFromPersistentQuery(persistentState: any) {
     loading: false,
     error: null,
     resultHeight: persistentState.resultHeight || 250,
+    activeResultSetIndex: 0,
   };
 }
 

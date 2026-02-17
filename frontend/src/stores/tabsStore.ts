@@ -19,8 +19,9 @@ export type QueryTabState = {
   content: string;
   loading: boolean;
   error: string | null;
-  results?: any;
+  results?: cache.ExecuteQueryResponse;
   resultHeight: number;
+  activeResultSetIndex: number;
 };
 
 export type QueryTab = {
@@ -287,6 +288,7 @@ export const useTabsStore = defineStore("tabs", () => {
         loading: false,
         error: null,
         resultHeight: 250,
+        activeResultSetIndex: 0,
       },
     });
   };
