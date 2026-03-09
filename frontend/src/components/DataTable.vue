@@ -8,45 +8,18 @@
           class="header-row sticky top-0 z-20 shadow-[0_1px_0_0_rgba(0,0,0,0.1)] divide-x divide-border/50"
           :style="{ display: 'grid', gridTemplateColumns: gridTemplateColumns }"
         >
-          <div
+          <DataTableHeaderCell
             v-for="(column, index) in columns"
             :key="column"
-            class="header-cell px-3 py-1.5 bg-surface-hover/80 backdrop-blur-md border-b border-border select-none transition-colors relative"
-          >
-            <div class="flex items-center gap-1">
-              <span class="truncate">{{ column }}</span>
-              <div class="flex-grow"></div>
-              <div
-                class="flex flex-col cursor-pointer hover:bg-surface-hover px-1 rounded"
-                @click="handleSort(column)"
-              >
-                <ChevronUp
-                  class="w-3 h-3 -mb-0.5"
-                  :class="{
-                    'text-primary':
-                      sortColumn === column && sortDirection === 'asc',
-                    'text-foreground-secondary/30':
-                      sortColumn !== column || sortDirection !== 'asc',
-                  }"
-                />
-                <ChevronDown
-                  class="w-3 h-3 -mt-0.5"
-                  :class="{
-                    'text-primary':
-                      sortColumn === column && sortDirection === 'desc',
-                    'text-foreground-secondary/30':
-                      sortColumn !== column || sortDirection !== 'desc',
-                  }"
-                />
-              </div>
-            </div>
-            <div
-              v-if="index < columns.length - 1"
-              class="resize-handle absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/20 active:bg-primary/40 transition-colors"
-              @mousedown.stop="handleResizeMouseDown($event, index)"
-              @click.stop
-            ></div>
-          </div>
+            :column="column"
+            :sort-column="sortColumn"
+            :sort-direction="sortDirection"
+            :is-last="index === columns.length - 1"
+            :active-filter="getActiveFilter(column)"
+            @sort="handleSort"
+            @filter="handleFilter"
+            @resize-mouse-down="handleResizeMouseDown($event, index)"
+          />
         </div>
 
         <!-- Data Rows -->
@@ -104,21 +77,24 @@
 </template>
 
 <script setup lang="ts">
-import { Database, ChevronUp, ChevronDown, Search } from "lucide-vue-next";
+import { Database, Search } from "lucide-vue-next";
 import { OverlayScrollbarsComponent } from "overlayscrollbars-vue";
 import { ref, onMounted, onUnmounted, nextTick, computed, watch } from "vue";
+import DataTableHeaderCell from "./DataTableHeaderCell.vue";
 
 interface Props {
   data: Record<string, any>[];
   columns: string[];
   sortColumn?: string;
   sortDirection?: "asc" | "desc";
+  filters?: any[];
 }
 
 const props = defineProps<Props>();
 
 const emit = defineEmits<{
   sort: [column: string, direction: "asc" | "desc"];
+  filter: [column: string, filter: { operator: string; value: any } | null];
 }>();
 
 const columnWidths = ref<number[]>(new Array(props.columns.length).fill(150));
@@ -152,6 +128,14 @@ const handleSort = (column: string) => {
     direction = "desc";
   }
   emit("sort", column, direction);
+};
+
+const handleFilter = (column: string, filter: { operator: string; value: any } | null) => {
+  emit("filter", column, filter);
+};
+
+const getActiveFilter = (column: string) => {
+  return props.filters?.find(f => f.column === column) || null;
 };
 
 const handleResizeMouseDown = (event: MouseEvent, index: number) => {

@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"fmt"
+	"strings"
 	"time"
 	"wails-dbman/pkg/cache"
 	"wails-dbman/pkg/procedure"
@@ -116,10 +117,25 @@ func (a *PostgresAdapter) buildWhereClause(filters []cache.Filter) (string, []in
 		if i > 0 {
 			where += " AND "
 		}
-		// Basic implementation, should be careful with operators and column names
-		// Using positional parameters $1, $2 for Postgres
-		where += fmt.Sprintf("\"%s\" %s $%d", f.Column, f.Operator, len(args)+1)
-		args = append(args, f.Value)
+
+		operator := f.Operator
+		value := f.Value
+
+		if operator == "IS NULL" || operator == "IS NOT NULL" {
+			where += fmt.Sprintf("\"%s\" %s", f.Column, operator)
+			continue
+		}
+
+		// If operator is LIKE but value doesn't contain %, add them
+		if (operator == "LIKE" || operator == "ILIKE") && value != nil {
+			strVal := fmt.Sprintf("%v", value)
+			if !strings.Contains(strVal, "%") {
+				value = "%" + strVal + "%"
+			}
+		}
+
+		where += fmt.Sprintf("\"%s\" %s $%d", f.Column, operator, len(args)+1)
+		args = append(args, value)
 	}
 	return where, args
 }

@@ -8,7 +8,9 @@
           :columns="tableState.schema.columns.map((col) => col.name)"
           :sort-column="tableState.sortColumn"
           :sort-direction="tableState.sortDirection"
+          :filters="tableState.filters"
           @sort="handleSort"
+          @filter="handleFilter"
         />
       </StateWrapper>
     </div>
@@ -35,6 +37,27 @@ const handleSort = async (column: string, direction: 'asc' | 'desc') => {
   props.tab.state.sortDirection = direction;
   // Reset to first page when sorting
   props.tab.state.page = 0;
+  await loadTableData(props.tab);
+};
+
+const handleFilter = async (column: string, filter: { operator: string; value: any } | null) => {
+  const filters = [...(props.tab.state.filters || [])];
+  const index = filters.findIndex(f => f.column === column);
+  
+  if (filter) {
+    if (index > -1) {
+      filters[index] = { ...filter, column };
+    } else {
+      filters.push({ ...filter, column });
+    }
+  } else {
+    if (index > -1) {
+      filters.splice(index, 1);
+    }
+  }
+  
+  props.tab.state.filters = filters;
+  props.tab.state.page = 0; // Reset to first page when filtering
   await loadTableData(props.tab);
 };
 </script>

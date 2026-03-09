@@ -3,6 +3,7 @@ package adapters
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 	"wails-dbman/pkg/cache"
 	"wails-dbman/pkg/procedure"
@@ -394,8 +395,24 @@ func (a *MSSQLAdapter) buildWhereClause(filters []cache.Filter) (string, []inter
 		if i > 0 {
 			where += " AND "
 		}
-		where += fmt.Sprintf("[%s] %s ?", f.Column, f.Operator)
-		args = append(args, f.Value)
+
+		operator := f.Operator
+		value := f.Value
+
+		if operator == "IS NULL" || operator == "IS NOT NULL" {
+			where += fmt.Sprintf("[%s] %s", f.Column, operator)
+			continue
+		}
+
+		if operator == "LIKE" && value != nil {
+			strVal := fmt.Sprintf("%v", value)
+			if !strings.Contains(strVal, "%") {
+				value = "%" + strVal + "%"
+			}
+		}
+
+		where += fmt.Sprintf("[%s] %s ?", f.Column, operator)
+		args = append(args, value)
 	}
 	return where, args
 }
