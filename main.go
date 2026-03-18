@@ -26,6 +26,7 @@ func main() {
 		Bind: []interface{}{
 			app,
 		},
+		HideWindowOnClose: true,
 	})
 
 	if err != nil {
