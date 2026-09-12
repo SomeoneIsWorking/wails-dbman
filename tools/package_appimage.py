@@ -183,7 +183,7 @@ def main() -> None:
         platform.system() == "Linux" and platform.machine() == "x86_64",
         "this packager supports Linux x86_64 only",
     )
-    binary = BUILD / "bin/wails-dbman.AppDir/usr/bin/wails-dbman"
+    binary = BUILD / "bin/wails-dbman"
     version = expected_version()
     stage_appdir(binary)
     TEMP.mkdir(parents=True, exist_ok=True)
