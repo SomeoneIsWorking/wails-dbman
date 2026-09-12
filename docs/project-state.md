@@ -99,13 +99,13 @@ Gap: large-schema, empty, error, and accessibility states remain unverified.
 
 ### S012 — Desktop releases
 
-The tag-gated workflow builds a Windows executable ZIP, a macOS `.app` ZIP, and a Linux AppImage
-from the same source tag. Linux packaging checks the AppImage contents and starts it under Xvfb.
-A local Linux x86-64 build and packaged launch smoke passed on 2026-09-12.
+The [v1.0.0 preview release](https://github.com/SomeoneIsWorking/wails-dbman/releases/tag/v1.0.0)
+contains a Windows executable ZIP, macOS arm64 `.app` ZIP, and Linux x86-64 AppImage from the same
+source tag. The [tag workflow](https://github.com/SomeoneIsWorking/wails-dbman/actions/runs/34695242044)
+passed all three hosted packaging checks; Linux also inspected and launched the AppImage under Xvfb.
 
-Gap: the workflow has not yet run on hosted Windows and macOS runners, the macOS app has no
-Developer ID signature/notarization, and no complete database workflow has been qualified from a
-release package. Compatible npm updates clear the high-severity production audit gate; the remaining
+Gap: the macOS app has no Developer ID signature/notarization, and no complete database workflow has
+been qualified from a release package. Compatible npm updates clear the high-severity production audit gate; the remaining
 Monaco/DOMPurify runtime finding is moderate, and the Vite build-tool finding is high and requires
 a separately verified Vite major upgrade. Android and WASM are outside this native desktop project's
 current goals; a future platform commitment needs a real host implementation and its own state item
