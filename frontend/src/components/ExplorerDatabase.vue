@@ -186,13 +186,13 @@ import {
 import type { DatabaseInfo } from "@/stores/connectionsStore";
 import CollapsibleItem from "./CollapsibleItem.vue";
 
-const props = defineProps<{
+defineProps<{
   database: DatabaseInfo;
   isExpanded: boolean | undefined;
   groupBySchema: boolean | undefined;
 }>();
 
-const emit = defineEmits<{
+defineEmits<{
   toggle: [];
   refresh: [];
   contextmenu: [event: MouseEvent];
