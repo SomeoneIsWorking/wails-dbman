@@ -52,6 +52,9 @@ def prepare_version(tag: str | None) -> None:
     project = json.loads(PROJECT.read_text(encoding="utf-8"))
     project.setdefault("info", {})["productVersion"] = version
     PROJECT.write_text(json.dumps(project, indent=2) + "\n", encoding="utf-8")
+    windows_resource = ROOT / "build" / "windows" / "info.json"
+    windows_resource.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(ROOT / "packaging" / "windows-info.json", windows_resource)
     print(f"release: Wails package version set to {version}")
 
 
@@ -83,9 +86,10 @@ def package_windows() -> None:
         capture_output=True,
         check=True,
     ).stdout.strip()
+    windows_version = f"{version}.0"
     require(
-        metadata == version,
-        f"Windows executable ProductVersion {metadata!r} differs from {version!r}",
+        metadata == windows_version,
+        f"Windows executable ProductVersion {metadata!r} differs from {windows_version!r}",
     )
     RELEASE.mkdir(parents=True, exist_ok=True)
     archive = RELEASE / "DBMan-windows-x86_64.zip"
