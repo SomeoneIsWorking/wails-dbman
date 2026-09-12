@@ -26,6 +26,7 @@ S005 is the current focus.
 | S009 | The desktop supports persistent light and dark themes | partial | — | G001 |
 | S010 | The database explorer can be resized without losing its layout | partial | S002 | G001 |
 | S011 | Global object search is keyboard-navigable across the connected server | partial | S002 | G001 |
+| S012 | Desktop releases provide verified Windows, macOS, and Linux packages | partial | — | G001 |
 
 ## Capability details
 
@@ -95,3 +96,17 @@ Gap: restart and edge-size behavior lack a canonical UI gate.
 The frontend implements keyboard-navigable global object search.
 
 Gap: large-schema, empty, error, and accessibility states remain unverified.
+
+### S012 — Desktop releases
+
+The tag-gated workflow builds a Windows executable ZIP, a macOS `.app` ZIP, and a Linux AppImage
+from the same source tag. Linux packaging checks the AppImage contents and starts it under Xvfb.
+A local Linux x86-64 build and packaged launch smoke passed on 2026-09-12.
+
+Gap: the workflow has not yet run on hosted Windows and macOS runners, the macOS app has no
+Developer ID signature/notarization, and no complete database workflow has been qualified from a
+release package. Compatible npm updates clear the high-severity production audit gate; the remaining
+Monaco/DOMPurify runtime finding is moderate, and the Vite build-tool finding is high and requires
+a separately verified Vite major upgrade. Android and WASM are outside this native desktop project's
+current goals; a future platform commitment needs a real host implementation and its own state item
+before publication.

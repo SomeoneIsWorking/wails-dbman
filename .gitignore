@@ -7,6 +7,7 @@ dist
 
 # Node dependencies
 node_modules
+__pycache__/
 
 # Logs
 logs
@@ -24,6 +25,6 @@ logs
 /cache
 /generated
 prisma/cache.db
-build/bin
+/build/
 
 /db.sqlite

@@ -11,7 +11,7 @@ interface Props {
   containerClass?: string;
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 
 const options = {
   // Default options, can be customized as needed
